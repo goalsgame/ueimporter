@@ -1,4 +1,5 @@
 import argparse
+import json
 import subprocess
 import sys
 import re
@@ -126,10 +127,46 @@ def list_modifications(config):
     return 0
 
 
+def read_unreal_engine_version(filename):
+    try:
+        with open(filename) as build_version_file:
+            build_version_dict = json.load(build_version_file)
+
+            keys = ['MajorVersion', 'MinorVersion', 'PatchVersion']
+            for key in keys:
+                if not key in build_version_dict:
+                    eprint(
+                        f'Error: Failed to find "{key}" in {filename}')
+                    sys.exit(1)
+            return '.'.join([str(build_version_dict.get(key)) for key in keys])
+    except Exception as e:
+        eprint(f'Failed to open {filename}, {e}')
+        sys.exit(1)
+
+
+def release_tag_to_unreal_engine_version(release_tag):
+    match = re.match('^([0-9]*).([0-9]*).([0-9]*)-.*', release_tag)
+    if match:
+        return '.'.join([match.group(i) for i in range(1, 4)])
+    else:
+        eprint(f'Error: Failed to parse version from {release_tag}')
+        sys.exit(1)
+
+
 def verify_plastic_repo_state(config):
     if not config.plastic.is_workspace_clean():
         eprint(
             f'Error: Plastic workspace needs to be clean')
+        return False
+
+    from_version = release_tag_to_unreal_engine_version(
+        config.from_release_tag)
+    build_version_filename = config.plastic.to_workspace_path(
+        'Engine/Build/Build.version')
+    checked_out_version = read_unreal_engine_version(build_version_filename)
+    if checked_out_version != from_version:
+        eprint(f'Error: Plastic repo has version {checked_out_version}'
+               f' checked out, expected {from_version}')
         return False
 
     return True
