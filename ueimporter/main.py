@@ -7,6 +7,10 @@ import re
 from pathlib import Path
 
 
+OP_SEPARATOR = '-' * 80
+INDENTATION = ' ' * 2
+
+
 def create_parser():
     parser = argparse.ArgumentParser(
         description='Imports Unreal Engine releases into plastic vendor branches'
@@ -50,6 +54,21 @@ def create_parser():
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
+
+
+class Logger:
+    def __init__(self):
+        self.indentation = ''
+
+    def print(self, line):
+        print(f'{self.indentation}{line}')
+
+    def indent(self):
+        self.indentation += INDENTATION
+
+    def deindent(self):
+        if len(self.indentation) >= len(INDENTATION):
+            self.indentation = self.indentation[:-len(INDENTATION)]
 
 
 def run(command, cwd=None):
@@ -111,25 +130,79 @@ class Plastic:
         return run(command, cwd=self.workspace_root)
 
 
-def list_modifications(config):
+class Operation:
+    def __init__(self, desc, logger):
+        self.desc = desc
+        self.logger = logger
+
+    def __str__(self):
+        return self.desc
+
+    def do(self):
+        pass
+
+
+class AddOp(Operation):
+    def __init__(self, filename, **kwargs):
+        Operation.__init__(self, f'Add {filename}', kwargs)
+        self.filename = Path(filename)
+
+    def do(self):
+        pass
+
+
+class ModifyOp(Operation):
+    def __init__(self, filename, **kwargs):
+        Operation.__init__(self, f'Modify {filename}', kwargs)
+        self.filename = Path(filename)
+
+    def do(self):
+        pass
+
+
+class DeleteOp(Operation):
+    def __init__(self, filename, **kwargs):
+        Operation.__init__(self, f'Delete {filename}', kwargs)
+        self.filename = Path(filename)
+
+    def do(self):
+        pass
+
+
+class MoveOp(Operation):
+    def __init__(self, source_filename, target_filename, **kwargs):
+        Operation.__init__(
+            self, f'Move {source_filename} to {target_filename}', kwargs)
+        self.source_filename = Path(source_filename)
+        self.target_filename = Path(target_filename)
+
+    def do(self):
+        pass
+
+
+def read_change_ops(config, logger):
     stdout = config.git.diff(config.from_release_tag, config.to_release_tag)
     move_regex = re.compile('^r[0-9]*$')
+    mods = []
+    adds = []
+    dels = []
+    moves = []
     for line in stdout.split('\n'):
         parts = line.split('\t')
         mode = parts[0].lower()
-        if mode == 'a':
-            print('Added', parts[1])
-        elif mode == 'm':
-            print('Modified', parts[1])
+        if mode == 'm':
+            mods.append(ModifyOp(parts[1], logger=logger))
+        elif mode == 'a':
+            adds.append(AddOp(parts[1], logger=logger))
         elif mode == 'd':
-            print('Deleted', parts[1])
+            dels.append(DeleteOp(parts[1], logger=logger))
         elif move_regex.match(mode):
-            print('Renamed', parts[1], 'to', parts[1])
+            moves.append(MoveOp(parts[1], parts[2], logger=logger))
         elif line:
             eprint('Error: Unrecognized mode', parts)
-            return 1
+            sys.exit(1)
 
-    return 0
+    return mods + adds + dels + moves
 
 
 def read_unreal_engine_version(filename):
@@ -245,4 +318,17 @@ def main():
     if not config.pretend and not verify_plastic_repo_state(config):
         return 1
 
-    return list_modifications(config)
+    logger = Logger()
+    ops = read_change_ops(config, logger)
+    op_count = len(ops)
+    if op_count == 0:
+        logger.print('Nothing to import, exiting')
+        return 0
+
+    logger.print('Processing {op_count} operations')
+    for i, op in enumerate(ops):
+        logger.print('')
+        logger.print(OP_SEPARATOR)
+        logger.print(f'{i + 1}/{op_count}: {op}')
+        op.do()
+    return 0
