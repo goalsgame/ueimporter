@@ -1,8 +1,10 @@
 import argparse
 import json
+import os
 import subprocess
 import sys
 import re
+import shutil
 
 from pathlib import Path
 
@@ -105,16 +107,17 @@ class Git:
 
 
 class Plastic:
-    def __init__(self, workspace_root):
+    def __init__(self, workspace_root, pretend):
         self.workspace_root = workspace_root
+        self.pretend = pretend
 
     def to_workspace_path(self, path):
         return self.workspace_root.joinpath(path)
 
-    def is_workspace_clean(self):
+    def is_workspace_clean(self, logger):
         arguments = ['status',
                      '--machinereadable']
-        stdout = self.run_cmd(arguments)
+        stdout = self.run_cmd(arguments, logger)
         lines = stdout.split('\n')
         if len(lines) == 1:
             return True
@@ -123,16 +126,47 @@ class Plastic:
         else:
             return False
 
-    def run_cmd(self, arguments):
-        command = ['cm'] + arguments
-        print(' '.join([str(s) for s in command]))
+    def add(self, path, logger):
+        return self.run_cmd(['add', path], logger)
 
-        return run(command, cwd=self.workspace_root)
+    def remove(self, path, logger):
+        return self.run_cmd(['remove', path], logger)
+
+    def checkout(self, path, logger):
+        self.run_cmd(['checkout', path], logger)
+
+    def move(self, from_path, to_path, logger):
+        self.run_cmd(['move', from_path, to_path], logger)
+
+    def run_cmd(self, arguments, logger):
+        command = ['cm'] + arguments
+        logger.print(' '.join([str(s) for s in command]))
+        if self.pretend:
+            return ''
+
+        stdout = run(command, cwd=self.workspace_root)
+
+        logger.indent()
+        for line in stdout.split('\n'):
+            if len(line) > 0:
+                logger.print(line)
+        logger.deindent()
+
+        return stdout
+
+
+def is_empty_dir(directory):
+    for _ in directory.iterdir():
+        return False
+    return True
 
 
 class Operation:
-    def __init__(self, desc, logger):
+    def __init__(self, desc, plastic, source_root_path, pretend, logger):
         self.desc = desc
+        self.plastic = plastic
+        self.source_root_path = source_root_path
+        self.pretend = pretend
         self.logger = logger
 
     def __str__(self):
@@ -141,43 +175,83 @@ class Operation:
     def do(self):
         pass
 
+    def ensure_directory_exists(self, directory):
+        directory = self.plastic.workspace_root.joinpath(directory)
+        if directory.is_dir():
+            return
+
+        self.logger.print(f'Creating {directory}')
+        if not self.pretend:
+            os.makedirs(directory)
+        self.plastic.add(directory, self.logger)
+
+    def copy(self, filename):
+        source_filename = self.source_root_path.joinpath(
+            filename)
+        target_filename = self.plastic.to_workspace_path(filename)
+
+        if not source_filename.is_file():
+            eprint(f'Failed to find {source_filename}')
+            sys.exit(1)
+
+        self.ensure_directory_exists(filename.parent)
+
+        self.logger.print(f'Copy from {source_filename}')
+        if not self.pretend:
+            # Copy file including file permissions and create/modify timstamps
+            shutil.copy2(source_filename, target_filename)
+
+    def remove_empty_directories(self, directory):
+        directory = self.plastic.to_workspace_path(directory)
+        while directory != self.plastic.workspace_root and is_empty_dir(directory):
+            self.plastic.remove(directory, self.logger)
+            directory = directory.parent
+
 
 class AddOp(Operation):
     def __init__(self, filename, **kwargs):
-        Operation.__init__(self, f'Add {filename}', kwargs)
+        Operation.__init__(self, f'Add {filename}', **kwargs)
         self.filename = Path(filename)
 
     def do(self):
-        pass
+        self.copy(self.filename)
+        self.plastic.add(self.filename, self.logger)
 
 
 class ModifyOp(Operation):
     def __init__(self, filename, **kwargs):
-        Operation.__init__(self, f'Modify {filename}', kwargs)
+        Operation.__init__(self, f'Modify {filename}', **kwargs)
         self.filename = Path(filename)
 
     def do(self):
-        pass
+        self.plastic.checkout(self.filename, self.logger)
+        self.copy(self.filename)
 
 
 class DeleteOp(Operation):
     def __init__(self, filename, **kwargs):
-        Operation.__init__(self, f'Delete {filename}', kwargs)
+        Operation.__init__(self, f'Delete {filename}', **kwargs)
         self.filename = Path(filename)
 
     def do(self):
-        pass
+        self.plastic.remove(self.filename, self.logger)
+        self.remove_empty_directories(self.filename.parent)
 
 
 class MoveOp(Operation):
     def __init__(self, source_filename, target_filename, **kwargs):
         Operation.__init__(
-            self, f'Move {source_filename} to {target_filename}', kwargs)
+            self, f'Move {source_filename} to {target_filename}', **kwargs)
         self.source_filename = Path(source_filename)
         self.target_filename = Path(target_filename)
 
     def do(self):
-        pass
+        self.ensure_directory_exists(self.target_filename.parent)
+        self.plastic.move(self.source_filename,
+                          self.target_filename,
+                          self.logger)
+        self.copy(self.target_filename)
+        self.remove_empty_directories(self.source_filename.parent)
 
 
 def read_change_ops(config, logger):
@@ -191,13 +265,29 @@ def read_change_ops(config, logger):
         parts = line.split('\t')
         mode = parts[0].lower()
         if mode == 'm':
-            mods.append(ModifyOp(parts[1], logger=logger))
+            mods.append(ModifyOp(parts[1],
+                                 logger=logger,
+                                 plastic=config.plastic,
+                                 source_root_path=config.source_root_path,
+                                 pretend=config.pretend))
         elif mode == 'a':
-            adds.append(AddOp(parts[1], logger=logger))
+            adds.append(AddOp(parts[1],
+                              logger=logger,
+                              plastic=config.plastic,
+                              source_root_path=config.source_root_path,
+                              pretend=config.pretend))
         elif mode == 'd':
-            dels.append(DeleteOp(parts[1], logger=logger))
+            dels.append(DeleteOp(parts[1],
+                                 logger=logger,
+                                 plastic=config.plastic,
+                                 source_root_path=config.source_root_path,
+                                 pretend=config.pretend))
         elif move_regex.match(mode):
-            moves.append(MoveOp(parts[1], parts[2], logger=logger))
+            moves.append(MoveOp(parts[1], parts[2],
+                                logger=logger,
+                                plastic=config.plastic,
+                                source_root_path=config.source_root_path,
+                                pretend=config.pretend))
         elif line:
             eprint('Error: Unrecognized mode', parts)
             sys.exit(1)
@@ -231,8 +321,8 @@ def release_tag_to_unreal_engine_version(release_tag):
         sys.exit(1)
 
 
-def verify_plastic_repo_state(config):
-    if not config.plastic.is_workspace_clean():
+def verify_plastic_repo_state(config, logger):
+    if not config.plastic.is_workspace_clean(logger):
         eprint(
             f'Error: Plastic workspace needs to be clean')
         return False
@@ -256,13 +346,13 @@ class Config:
                  plastic,
                  from_release_tag,
                  to_release_tag,
-                 source_release_zip_path,
+                 source_root_path,
                  pretend):
         self.git = git
         self.plastic = plastic
         self.from_release_tag = from_release_tag
         self.to_release_tag = to_release_tag
-        self.source_release_zip_path = source_release_zip_path
+        self.source_root_path = source_root_path
         self.pretend = pretend
 
 
@@ -283,7 +373,7 @@ def create_config(args):
             f'Error: Failed to find release tag named {args.from_release_tag}')
         sys.exit(1)
 
-    plastic = Plastic(args.plastic_workspace_root)
+    plastic = Plastic(args.plastic_workspace_root, args.pretend)
     if not plastic.to_workspace_path('.plastic').is_dir():
         eprint(
             f'Error: Failed to find plastic repo at {args.plastic_workspace_root}')
@@ -315,10 +405,10 @@ def main():
     args = parser.parse_args()
     config = create_config(args)
 
-    if not config.pretend and not verify_plastic_repo_state(config):
+    logger = Logger()
+    if not config.pretend and not verify_plastic_repo_state(config, logger):
         return 1
 
-    logger = Logger()
     ops = read_change_ops(config, logger)
     op_count = len(ops)
     if op_count == 0:
