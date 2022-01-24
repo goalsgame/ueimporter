@@ -40,6 +40,11 @@ def create_parser():
                         Specifies the root of the UE plastic workspace on disc.
                         Default is CWD.
                         """)
+    parser.add_argument('--pretend',
+                        action='store_true',
+                        help="""
+                        Set to print what is about to happen without
+                        doing anything""")
     return parser
 
 
@@ -178,12 +183,14 @@ class Config:
                  plastic,
                  from_release_tag,
                  to_release_tag,
-                 source_release_zip_path):
+                 source_release_zip_path,
+                 pretend):
         self.git = git
         self.plastic = plastic
         self.from_release_tag = from_release_tag
         self.to_release_tag = to_release_tag
         self.source_release_zip_path = source_release_zip_path
+        self.pretend = pretend
 
 
 def create_config(args):
@@ -226,7 +233,8 @@ def create_config(args):
                   plastic,
                   args.from_release_tag,
                   args.to_release_tag,
-                  source_release_zip_path)
+                  source_release_zip_path,
+                  args.pretend)
 
 
 def main():
@@ -234,7 +242,7 @@ def main():
     args = parser.parse_args()
     config = create_config(args)
 
-    if not verify_plastic_repo_state(config):
+    if not config.pretend and not verify_plastic_repo_state(config):
         return 1
 
     return list_modifications(config)
