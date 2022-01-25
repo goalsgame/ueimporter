@@ -86,6 +86,24 @@ class Plastic:
     def to_workspace_path(self, path):
         return self.workspace_root.joinpath(path)
 
+    def is_workspace_clean(self):
+        arguments = ['status',
+                     '--machinereadable']
+        stdout = self.run_cmd(arguments)
+        lines = stdout.split('\n')
+        if len(lines) == 1:
+            return True
+        elif len(lines) == 2:
+            return len(lines[1]) == 0
+        else:
+            return False
+
+    def run_cmd(self, arguments):
+        command = ['cm'] + arguments
+        print(' '.join([str(s) for s in command]))
+
+        return run(command, cwd=self.workspace_root)
+
 
 def list_modifications(config):
     stdout = config.git.diff(config.from_release_tag, config.to_release_tag)
@@ -106,6 +124,15 @@ def list_modifications(config):
             return 1
 
     return 0
+
+
+def verify_plastic_repo_state(config):
+    if not config.plastic.is_workspace_clean():
+        eprint(
+            f'Error: Plastic workspace needs to be clean')
+        return False
+
+    return True
 
 
 class Config:
@@ -169,5 +196,8 @@ def main():
     parser = create_parser()
     args = parser.parse_args()
     config = create_config(args)
+
+    if not verify_plastic_repo_state(config):
+        return 1
 
     return list_modifications(config)
