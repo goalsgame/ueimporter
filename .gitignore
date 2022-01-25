@@ -2,3 +2,8 @@
 __pycache__/
 *.py[cod]
 *$py.class
+
+# pip/setuptools/distutils
+*.egg-info/
+.eggs/
+dist/
