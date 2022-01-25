@@ -32,6 +32,13 @@ def create_parser():
                         Specifies where release zip files have been extracted.
                         See https://github.com/EpicGames/UnrealEngine/releases
                         """)
+    parser.add_argument('--plastic-workspace-root',
+                        type=lambda p: Path(p).absolute(),
+                        default=Path.cwd(),
+                        help="""
+                        Specifies the root of the UE plastic workspace on disc.
+                        Default is CWD.
+                        """)
     return parser
 
 
@@ -72,6 +79,14 @@ class Git:
         return run(['git'] + arguments, cwd=self.repo_root)
 
 
+class Plastic:
+    def __init__(self, workspace_root):
+        self.workspace_root = workspace_root
+
+    def to_workspace_path(self, path):
+        return self.workspace_root.joinpath(path)
+
+
 def list_modifications(config):
     stdout = config.git.diff(config.from_release_tag, config.to_release_tag)
     move_regex = re.compile('^r[0-9]*$')
@@ -96,10 +111,12 @@ def list_modifications(config):
 class Config:
     def __init__(self,
                  git,
+                 plastic,
                  from_release_tag,
                  to_release_tag,
                  source_release_zip_path):
         self.git = git
+        self.plastic = plastic
         self.from_release_tag = from_release_tag
         self.to_release_tag = to_release_tag
         self.source_release_zip_path = source_release_zip_path
@@ -122,6 +139,12 @@ def create_config(args):
             f'Error: Failed to find release tag named {args.from_release_tag}')
         sys.exit(1)
 
+    plastic = Plastic(args.plastic_workspace_root)
+    if not plastic.to_workspace_path('.plastic').is_dir():
+        eprint(
+            f'Error: Failed to find plastic repo at {args.plastic_workspace_root}')
+        sys.exit(1)
+
     if not args.zip_package_root.is_dir():
         eprint(
             f'Error: Failed to find zip package root {args.zip_package_root}')
@@ -136,6 +159,7 @@ def create_config(args):
         sys.exit(1)
 
     return Config(git,
+                  plastic,
                   args.from_release_tag,
                   args.to_release_tag,
                   source_release_zip_path)
