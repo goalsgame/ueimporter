@@ -14,5 +14,7 @@ setup(name='ueimporter',
       zip_safe=False,
       entry_points={
           'console_scripts': ['ueimporter=ueimporter.main:main'],
-      }
+      },
+      setup_requires=['pytest-runner'],
+      tests_require=['pytest']
       )

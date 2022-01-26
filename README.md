@@ -42,3 +42,18 @@ From your git repo root:
 ```
 $ pip install --user -e .
 ```
+
+### Testing
+
+`ueimporter` use [pytest](https://docs.pytest.org) to run unit tests, it's
+automatically installed when you install `ueimporter` with `pip`.
+
+It's simple to use, again from the repo root:
+```
+# Run all tests
+$ pytest
+
+# Run a specific test-file (tests/test_main.py)
+$ pytest -q test_main.py
+
+```
