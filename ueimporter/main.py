@@ -1,5 +1,4 @@
 import argparse
-import json
 import os
 import subprocess
 import sys
@@ -8,6 +7,7 @@ import shutil
 
 from pathlib import Path
 
+import ueimporter.version as version
 
 OP_SEPARATOR = '-' * 80
 INDENTATION = ' ' * 2
@@ -295,30 +295,13 @@ def read_change_ops(config, logger):
     return mods + adds + dels + moves
 
 
-def parse_unreal_engine_build_json(build_version_file_content):
-    build_version_dict = json.loads(build_version_file_content)
-    keys = ['MajorVersion', 'MinorVersion', 'PatchVersion']
-    for key in keys:
-        if not key in build_version_dict:
-            return None
-    return '.'.join([str(build_version_dict.get(key)) for key in keys])
-
-
-def release_tag_to_unreal_engine_version(release_tag):
-    match = re.match('^([0-9]*).([0-9]*).([0-9]*)-.*', release_tag)
-    if match:
-        return '.'.join([match.group(i) for i in range(1, 4)])
-    else:
-        return None
-
-
 def verify_plastic_repo_state(config, logger):
     if not config.plastic.is_workspace_clean(logger):
         eprint(
             f'Error: Plastic workspace needs to be clean')
         return False
 
-    from_version = release_tag_to_unreal_engine_version(
+    from_version = version.release_tag_to_unreal_engine_version(
         config.from_release_tag)
     if not from_version:
         eprint(
@@ -331,7 +314,7 @@ def verify_plastic_repo_state(config, logger):
         eprint(f'{build_version_file} does not exist')
         sys.exit(1)
 
-    checked_out_version = parse_unreal_engine_build_json(
+    checked_out_version = version.parse_unreal_engine_build_json(
         build_version_file.read_text())
     if checked_out_version != from_version:
         eprint(f'Error: Plastic repo has version {checked_out_version}'

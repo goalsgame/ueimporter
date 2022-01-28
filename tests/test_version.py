@@ -1,7 +1,7 @@
 import json
 
-from ueimporter.main import parse_unreal_engine_build_json
-from ueimporter.main import release_tag_to_unreal_engine_version
+from ueimporter.version import parse_unreal_engine_build_json
+from ueimporter.version import release_tag_to_unreal_engine_version
 
 
 def test_parse_unreal_engine_build_json():
@@ -33,4 +33,4 @@ def test_release_tag_to_unreal_engine_version():
 
 
 def test_release_tag_to_unreal_engine_version_without_patch_will_fail():
-    assert release_tag_to_unreal_engine_version('4.27-release') == None
+    assert release_tag_to_unreal_engine_version('4.27.0-release') == '4.27.0'
