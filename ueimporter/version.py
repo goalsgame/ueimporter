@@ -1,5 +1,48 @@
 import json
 import re
+import copy
+
+GIT_RELEASE_TAG_KEY = 'GitReleaseTag'
+
+
+def create_ueimporter_json():
+    return UEImporterJson({GIT_RELEASE_TAG_KEY: ''})
+
+
+def read_ueimporter_json(filename):
+    if not filename.is_file():
+        return None
+    file_content = filename.read_text()
+    json_dict = json.loads(file_content, encoding='utf-8')
+    return UEImporterJson(json_dict)
+
+
+def write_ueimporter_json(filename, ueimport_version, force_overwrite=False):
+    if not force_overwrite and filename.is_file():
+        return False
+
+    file_content = ueimport_version.to_json()
+    filename.write_text(file_content, encoding='utf-8')
+    return True
+
+
+class UEImporterJson:
+    def __init__(self, version_dict):
+        valid_keys = [GIT_RELEASE_TAG_KEY]
+        valid_dict = {k: v for k, v in version_dict.items() if k in valid_keys}
+        self._dict = copy.deepcopy(valid_dict)
+        self._dict.setdefault(GIT_RELEASE_TAG_KEY, '')
+
+    @property
+    def git_release_tag(self):
+        return self._dict.get(GIT_RELEASE_TAG_KEY, None)
+
+    @git_release_tag.setter
+    def git_release_tag(self, value):
+        self._dict[GIT_RELEASE_TAG_KEY] = value
+
+    def to_json(self, indent=4):
+        return json.dumps(self._dict, sort_keys=True, indent=indent)
 
 
 def from_build_version_json(file_content):

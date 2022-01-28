@@ -3,6 +3,59 @@ import json
 import ueimporter.version as version
 
 
+def test_ueimporter_json_with_tag_will_succeed():
+    version_dict = {
+        'GitReleaseTag': '4.27.1-release'
+    }
+    assert version.UEImporterJson(
+        version_dict).git_release_tag == '4.27.1-release'
+
+
+def test_ueimporter_json_without_key_will_yield_empty_tag():
+    version_dict = {
+        'MisspelledGitReleaseTag': '4.27.1-release'
+    }
+    assert version.UEImporterJson(version_dict).git_release_tag == ''
+    assert version.UEImporterJson({}).git_release_tag == ''
+
+
+def test_ueimporter_json_set_tag_will_succeed():
+    version_dict = {
+        'GitReleaseTag': '4.27.1-release'
+    }
+    ueimporter_json = version.UEImporterJson(version_dict)
+    ueimporter_json.git_release_tag = '4.27.2-release'
+    assert ueimporter_json.git_release_tag == '4.27.2-release'
+
+
+def test_ueimporter_json_will_yeild_json_with_tag():
+    version_dict = {
+        'GitReleaseTag': '4.27.1-release'
+    }
+    assert version.UEImporterJson(version_dict).to_json(indent=4) == \
+        """{
+    "GitReleaseTag": "4.27.1-release"
+}"""
+
+
+def test_ueimporter_json_without_key_will_yeild_json_with_empty_tag():
+    assert version.UEImporterJson({}).to_json(indent=4) == \
+        """{
+    "GitReleaseTag": ""
+}"""
+
+
+def test_ueimporter_json_with_invalid_key_will_yeild_json_with_valid_keys():
+    version_dict = {
+        'GitReleaseTag': '4.27.1-release',
+        'ThisKeyDoesNotBelong': 'SomeValue',
+    }
+    assert version.UEImporterJson(version_dict).to_json(indent=4) == \
+        """{
+    "GitReleaseTag": "4.27.1-release"
+}"""
+
+
 def test_from_build_version_json():
     file_content = json.dumps({
         'MajorVersion': '4',

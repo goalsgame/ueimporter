@@ -46,6 +46,14 @@ def create_parser():
                         Specifies the root of the UE plastic workspace on disc.
                         Default is CWD.
                         """)
+    parser.add_argument('--ueimporter-json',
+                        type=lambda p: Path(p).absolute(),
+                        default=Path('.ueimporter.json'),
+                        help="""
+                        Name of file where last integrated UE version will be
+                        stored.
+                        Default is ueimporter.json.
+                        """)
     parser.add_argument('--pretend',
                         action='store_true',
                         help="""
@@ -322,6 +330,15 @@ def verify_plastic_repo_state(config, logger):
                f' checked out, expected {from_version}')
         return False
 
+    ueimporter_json = version.read_ueimporter_json(
+        config.ueimporter_json)
+    if ueimporter_json and \
+            (ueimporter_json.git_release_tag != config.from_release_tag):
+        eprint(f'Error: {config.ueimporter_json} says repo'
+               f' has UE version {checked_out_version}'
+               f' checked out, expected {from_version}')
+        return False
+
     return True
 
 
@@ -332,12 +349,14 @@ class Config:
                  from_release_tag,
                  to_release_tag,
                  source_root_path,
+                 ueimporter_json,
                  pretend):
         self.git = git
         self.plastic = plastic
         self.from_release_tag = from_release_tag
         self.to_release_tag = to_release_tag
         self.source_root_path = source_root_path
+        self.ueimporter_json = ueimporter_json
         self.pretend = pretend
 
 
@@ -382,7 +401,21 @@ def create_config(args):
                   args.from_release_tag,
                   args.to_release_tag,
                   source_release_zip_path,
+                  args.ueimporter_json,
                   args.pretend)
+
+
+def update_ueimporter_json(config):
+    ueimporter_json_filename = config.plastic.to_workspace_path(
+        config.ueimporter_json)
+    ueimporter_json = version.read_ueimporter_json(ueimporter_json_filename)
+    if not ueimporter_json:
+        ueimporter_json = version.create_ueimporter_json()
+
+    ueimporter_json.git_release_tag = config.to_release_tag
+    if not config.pretend:
+        version.write_ueimporter_json(
+            ueimporter_json_filename, ueimporter_json, force_overwrite=True)
 
 
 def main():
@@ -400,10 +433,16 @@ def main():
         logger.print('Nothing to import, exiting')
         return 0
 
-    logger.print('Processing {op_count} operations')
+    logger.print(f'Processing {op_count} operations')
     for i, op in enumerate(ops):
         logger.print('')
         logger.print(OP_SEPARATOR)
         logger.print(f'{i + 1}/{op_count}: {op}')
         op.do()
+
+    logger.print(f'Updating {config.ueimporter_json}'
+                 f'with release tag {config.to_release_tag}')
+
+    update_ueimporter_json(config)
+
     return 0
