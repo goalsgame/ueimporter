@@ -306,13 +306,14 @@ def verify_plastic_repo_state(config, logger):
     if not from_version:
         eprint(
             f'Error: Failed to parse version from {config.from_release_tag}')
-        sys.exit(1)
+        return False
 
+    build_version_filename = 'Engine/Build/Build.version'
     build_version_file = config.plastic.to_workspace_path(
-        'Engine/Build/Build.version')
+        build_version_filename)
     if not build_version_file.is_file():
-        eprint(f'{build_version_file} does not exist')
-        sys.exit(1)
+        eprint(f'{build_version_filename} does not exist')
+        return False
 
     checked_out_version = version.from_build_version_json(
         build_version_file.read_text())
