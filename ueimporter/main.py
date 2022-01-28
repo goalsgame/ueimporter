@@ -295,21 +295,13 @@ def read_change_ops(config, logger):
     return mods + adds + dels + moves
 
 
-def read_unreal_engine_version(filename):
-    try:
-        with open(filename) as build_version_file:
-            build_version_dict = json.load(build_version_file)
-
-            keys = ['MajorVersion', 'MinorVersion', 'PatchVersion']
-            for key in keys:
-                if not key in build_version_dict:
-                    eprint(
-                        f'Error: Failed to find "{key}" in {filename}')
-                    sys.exit(1)
-            return '.'.join([str(build_version_dict.get(key)) for key in keys])
-    except Exception as e:
-        eprint(f'Failed to open {filename}, {e}')
-        sys.exit(1)
+def parse_unreal_engine_build_json(build_version_file_content):
+    build_version_dict = json.loads(build_version_file_content)
+    keys = ['MajorVersion', 'MinorVersion', 'PatchVersion']
+    for key in keys:
+        if not key in build_version_dict:
+            return None
+    return '.'.join([str(build_version_dict.get(key)) for key in keys])
 
 
 def release_tag_to_unreal_engine_version(release_tag):
@@ -317,8 +309,7 @@ def release_tag_to_unreal_engine_version(release_tag):
     if match:
         return '.'.join([match.group(i) for i in range(1, 4)])
     else:
-        eprint(f'Error: Failed to parse version from {release_tag}')
-        sys.exit(1)
+        return None
 
 
 def verify_plastic_repo_state(config, logger):
@@ -329,9 +320,19 @@ def verify_plastic_repo_state(config, logger):
 
     from_version = release_tag_to_unreal_engine_version(
         config.from_release_tag)
-    build_version_filename = config.plastic.to_workspace_path(
+    if not from_version:
+        eprint(
+            f'Error: Failed to parse version from {config.from_release_tag}')
+        sys.exit(1)
+
+    build_version_file = config.plastic.to_workspace_path(
         'Engine/Build/Build.version')
-    checked_out_version = read_unreal_engine_version(build_version_filename)
+    if not build_version_file.is_file():
+        eprint(f'{build_version_file} does not exist')
+        sys.exit(1)
+
+    checked_out_version = parse_unreal_engine_build_json(
+        build_version_file.read_text())
     if checked_out_version != from_version:
         eprint(f'Error: Plastic repo has version {checked_out_version}'
                f' checked out, expected {from_version}')
