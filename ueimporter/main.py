@@ -331,7 +331,7 @@ def verify_plastic_repo_state(config, logger):
         return False
 
     ueimporter_json = version.read_ueimporter_json(
-        config.ueimporter_json)
+        config.ueimporter_json_filename)
     if ueimporter_json and \
             (ueimporter_json.git_release_tag != config.from_release_tag):
         eprint(f'Error: {config.ueimporter_json} says repo'
@@ -349,14 +349,14 @@ class Config:
                  from_release_tag,
                  to_release_tag,
                  source_root_path,
-                 ueimporter_json,
+                 ueimporter_json_filename,
                  pretend):
         self.git = git
         self.plastic = plastic
         self.from_release_tag = from_release_tag
         self.to_release_tag = to_release_tag
         self.source_root_path = source_root_path
-        self.ueimporter_json = ueimporter_json
+        self.ueimporter_json_filename = ueimporter_json_filename
         self.pretend = pretend
 
 
@@ -372,6 +372,10 @@ def create_config(args):
         eprint(
             f'Error: Failed to find git repo at {args.git_repo_root}')
         sys.exit(1)
+
+    ueimporter_json_filename = args.ueimporter_json \
+        if args.ueimporter_json.is_absolute() \
+        else plastic.to_workspace_path(args.ueimporter_json)
 
     if not git.rev_parse(args.from_release_tag):
         eprint(
@@ -401,21 +405,21 @@ def create_config(args):
                   args.from_release_tag,
                   args.to_release_tag,
                   source_release_zip_path,
-                  args.ueimporter_json,
+                  ueimporter_json_filename,
                   args.pretend)
 
 
 def update_ueimporter_json(config):
-    ueimporter_json_filename = config.plastic.to_workspace_path(
-        config.ueimporter_json)
-    ueimporter_json = version.read_ueimporter_json(ueimporter_json_filename)
+    ueimporter_json = version.read_ueimporter_json(
+        config.ueimporter_json_filename)
     if not ueimporter_json:
         ueimporter_json = version.create_ueimporter_json()
 
     ueimporter_json.git_release_tag = config.to_release_tag
     if not config.pretend:
         version.write_ueimporter_json(
-            ueimporter_json_filename, ueimporter_json, force_overwrite=True)
+            config.ueimporter_json_filename, ueimporter_json,
+            force_overwrite=True)
 
 
 def main():
@@ -440,7 +444,7 @@ def main():
         logger.print(f'{i + 1}/{op_count}: {op}')
         op.do()
 
-    logger.print(f'Updating {config.ueimporter_json}'
+    logger.print(f'Updating {config.ueimporter_json_filename}'
                  f'with release tag {config.to_release_tag}')
 
     update_ueimporter_json(config)
