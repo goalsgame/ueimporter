@@ -27,8 +27,10 @@ def create_parser():
                         $ git clone git@github.com:EpicGames/UnrealEngine.git
                         """)
     parser.add_argument('--from-release-tag',
-                        required=True,
-                        help='Git tag of release currently used')
+                        help="""
+                        Git tag of release currently used.
+                        Required whenever a ueimporter.json file does not exist.
+                        """)
     parser.add_argument('--to-release-tag',
                         required=True,
                         help='Git tag of release to upgrade to')
@@ -377,9 +379,19 @@ def create_config(args):
         if args.ueimporter_json.is_absolute() \
         else plastic.to_workspace_path(args.ueimporter_json)
 
-    if not git.rev_parse(args.from_release_tag):
+    ueimporter_json = version.read_ueimporter_json(ueimporter_json_filename)
+    from_release_tag = ueimporter_json.git_release_tag \
+        if ueimporter_json \
+        else args.from_release_tag
+    if not from_release_tag:
         eprint(
-            f'Error: Failed to find release tag named {args.from_release_tag}')
+            f'Error: Please specify a git release tag with either'
+            f'a {args.ueimporter_json} file or --from-release-tag param')
+        sys.exit(1)
+
+    if not git.rev_parse(from_release_tag):
+        eprint(
+            f'Error: Failed to find release tag named {from_release_tag}')
         sys.exit(1)
 
     if not git.rev_parse(args.to_release_tag):
@@ -402,7 +414,7 @@ def create_config(args):
 
     return Config(git,
                   plastic,
-                  args.from_release_tag,
+                  from_release_tag,
                   args.to_release_tag,
                   source_release_zip_path,
                   ueimporter_json_filename,
