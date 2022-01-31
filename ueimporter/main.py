@@ -173,6 +173,11 @@ def is_empty_dir(directory):
     return True
 
 
+class OpException(Exception):
+    def __init__(self, message):
+        self.message = message
+
+
 class Operation:
     def __init__(self, desc, plastic, source_root_path, pretend, logger):
         self.desc = desc
@@ -203,8 +208,7 @@ class Operation:
         target_filename = self.plastic.to_workspace_path(filename)
 
         if not source_filename.is_file():
-            eprint(f'Failed to find {source_filename}')
-            sys.exit(1)
+            raise OpException(f'Failed to find {source_filename}')
 
         self.ensure_directory_exists(filename.parent)
 
@@ -461,11 +465,41 @@ def main():
         return 0
 
     logger.print(f'Processing {op_count} operations')
+    failed_ops = []
     for i, op in enumerate(ops):
         logger.print('')
         logger.print(OP_SEPARATOR)
         logger.print(f'{i + 1}/{op_count}: {op}')
-        op.do()
+        try:
+            op.do()
+        except OpException as e:
+            eprint(f'Error: {e.message}')
+            failed_ops.append((op, e))
+        except BaseException as e:
+            raise e
+
+    if len(failed_ops) > 0:
+        logger.print('')
+        logger.print(OP_SEPARATOR)
+        logger.print(f'Failed to process {len(failed_ops)} operations')
+        for (failed_op, exception) in failed_ops:
+            logger.print('')
+            logger.print(OP_SEPARATOR)
+            logger.print(f'{failed_op}')
+            logger.indent()
+            logger.print(f'{exception}')
+            logger.deindent()
+
+        while True:
+            logger.print('')
+            logger.print(OP_SEPARATOR)
+            user_input = input('Do you want to continue? [yes|no]: ').lower()
+            if user_input in ['yes', 'y']:
+                break
+            elif user_input in ['no', 'n']:
+                return 1
+            else:
+                logger.print(f'"{user_input}" is not a valid choice')
 
     logger.print('')
     logger.print(OP_SEPARATOR)
