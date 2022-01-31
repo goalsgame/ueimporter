@@ -12,8 +12,8 @@ def create_ueimporter_json():
 def read_ueimporter_json(filename):
     if not filename.is_file():
         return None
-    file_content = filename.read_text()
-    json_dict = json.loads(file_content, encoding='utf-8')
+    file_content = filename.read_text(encoding='utf-8')
+    json_dict = json.loads(file_content)
     return UEImporterJson(json_dict)
 
 
