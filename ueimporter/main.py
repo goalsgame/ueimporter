@@ -374,7 +374,7 @@ def create_config(args):
 
     if not git.rev_parse(args.to_release_tag):
         eprint(
-            f'Error: Failed to find release tag named {args.from_release_tag}')
+            f'Error: Failed to find release tag named {args.to_release_tag}')
         sys.exit(1)
 
     plastic = Plastic(args.plastic_workspace_root, args.pretend)
