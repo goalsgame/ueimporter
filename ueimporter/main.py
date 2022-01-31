@@ -361,6 +361,12 @@ class Config:
 
 
 def create_config(args):
+    plastic = Plastic(args.plastic_workspace_root, args.pretend)
+    if not plastic.to_workspace_path('.plastic').is_dir():
+        eprint(
+            f'Error: Failed to find plastic repo at {args.plastic_workspace_root}')
+        sys.exit(1)
+
     git = Git(args.git_repo_root)
     if not git.to_repo_path('.git').is_dir():
         eprint(
@@ -375,12 +381,6 @@ def create_config(args):
     if not git.rev_parse(args.to_release_tag):
         eprint(
             f'Error: Failed to find release tag named {args.to_release_tag}')
-        sys.exit(1)
-
-    plastic = Plastic(args.plastic_workspace_root, args.pretend)
-    if not plastic.to_workspace_path('.plastic').is_dir():
-        eprint(
-            f'Error: Failed to find plastic repo at {args.plastic_workspace_root}')
         sys.exit(1)
 
     if not args.zip_package_root.is_dir():
