@@ -101,19 +101,21 @@ class Git:
     def to_repo_path(self, path):
         return self.repo_root.joinpath(path)
 
-    def rev_parse(self, ref):
-        return self.run_cmd(['rev-parse', ref])
+    def rev_parse(self, ref, logger):
+        return self.run_cmd(['rev-parse', ref], logger)
 
-    def diff(self, from_ref, to_ref):
+    def diff(self, from_ref, to_ref, logger):
         arguments = [
             'diff',
             '--name-status',
             from_ref,
             to_ref]
-        return self.run_cmd(arguments)
+        return self.run_cmd(arguments, logger)
 
-    def run_cmd(self, arguments):
-        return run(['git'] + arguments, cwd=self.repo_root)
+    def run_cmd(self, arguments, logger):
+        command = ['git'] + arguments
+        logger.print(' '.join([str(s) for s in command]))
+        return run(command, cwd=self.repo_root)
 
 
 class Plastic:
@@ -265,7 +267,8 @@ class MoveOp(Operation):
 
 
 def read_change_ops(config, logger):
-    stdout = config.git.diff(config.from_release_tag, config.to_release_tag)
+    stdout = config.git.diff(config.from_release_tag,
+                             config.to_release_tag, logger)
     move_regex = re.compile('^r[0-9]*$')
     mods = []
     adds = []
@@ -362,7 +365,7 @@ class Config:
         self.pretend = pretend
 
 
-def create_config(args):
+def create_config(args, logger):
     plastic = Plastic(args.plastic_workspace_root, args.pretend)
     if not plastic.to_workspace_path('.plastic').is_dir():
         eprint(
@@ -389,12 +392,12 @@ def create_config(args):
             f'a {args.ueimporter_json} file or --from-release-tag param')
         sys.exit(1)
 
-    if not git.rev_parse(from_release_tag):
+    if not git.rev_parse(from_release_tag, logger):
         eprint(
             f'Error: Failed to find release tag named {from_release_tag}')
         sys.exit(1)
 
-    if not git.rev_parse(args.to_release_tag):
+    if not git.rev_parse(args.to_release_tag, logger):
         eprint(
             f'Error: Failed to find release tag named {args.to_release_tag}')
         sys.exit(1)
@@ -444,9 +447,10 @@ def update_ueimporter_json(config, logger):
 def main():
     parser = create_parser()
     args = parser.parse_args()
-    config = create_config(args)
 
     logger = Logger()
+    config = create_config(args, logger)
+
     if not config.pretend and not verify_plastic_repo_state(config, logger):
         return 1
 
