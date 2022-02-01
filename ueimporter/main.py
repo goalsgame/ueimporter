@@ -421,17 +421,24 @@ def create_config(args):
                   args.pretend)
 
 
-def update_ueimporter_json(config):
+def update_ueimporter_json(config, logger):
     ueimporter_json = version.read_ueimporter_json(
         config.ueimporter_json_filename)
+    ueimporter_created = False
     if not ueimporter_json:
         ueimporter_json = version.create_ueimporter_json()
+        ueimporter_created = True
 
     ueimporter_json.git_release_tag = config.to_release_tag
     if not config.pretend:
         version.write_ueimporter_json(
             config.ueimporter_json_filename, ueimporter_json,
             force_overwrite=True)
+
+    if ueimporter_created:
+        config.plastic.add(config.ueimporter_json_filename, logger)
+    else:
+        config.plastic.checkout(config.ueimporter_json_filename, logger)
 
 
 def main():
@@ -459,6 +466,6 @@ def main():
     logger.print(f'Updating {config.ueimporter_json_filename}'
                  f'with release tag {config.to_release_tag}')
 
-    update_ueimporter_json(config)
+    update_ueimporter_json(config, logger)
 
     return 0
