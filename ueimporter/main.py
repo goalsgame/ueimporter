@@ -1,10 +1,12 @@
 import argparse
+import datetime
 import enum
 import os
-import subprocess
-import sys
 import re
 import shutil
+import subprocess
+import sys
+import time
 
 from pathlib import Path
 
@@ -501,10 +503,18 @@ def main():
     failed_ops = []
     continue_choice = Continue.ALWAYS if args.continue_on_error \
         else Continue.UNKNOWN
+    start_timestamp = time.time()
     for i, op in enumerate(ops):
         logger.print('')
         logger.print(OP_SEPARATOR)
-        logger.print(f'{i + 1}/{op_count}: {op}')
+        elapsed_time = time.time() - start_timestamp
+        remaining_time = ((elapsed_time / i) * (op_count - i)) if i else -1.0
+        elapsed_time_delta = datetime.timedelta(seconds=round(elapsed_time))
+        remaining_time_delta = datetime.timedelta(seconds=round(remaining_time))
+        logger.print(f'{i + 1}/{op_count} ({i * 100 / op_count:3.1f}%)'
+                     f' - Elapsed {elapsed_time_delta}'
+                     f' - Remaining {remaining_time_delta}')
+        logger.print(op)
         try:
             op.do()
         except OpException as e:
