@@ -76,16 +76,15 @@ def create_parser():
     return parser
 
 
-def eprint(*args, **kwargs):
-    print(*args, file=sys.stderr, **kwargs)
-
-
 class Logger:
     def __init__(self):
         self.indentation = ''
 
     def print(self, line):
         print(f'{self.indentation}{line}')
+
+    def eprint(self, *args, **kwargs):
+        print(*args, file=sys.stderr, **kwargs)
 
     def indent(self):
         self.indentation += INDENTATION
@@ -95,12 +94,12 @@ class Logger:
             self.indentation = self.indentation[:-len(INDENTATION)]
 
 
-def run(command, cwd=None):
+def run(command, logger, cwd=None):
     res = subprocess.run(command, capture_output=True,
                          encoding='utf-8', cwd=cwd)
 
     if res.returncode != 0 or res.stderr:
-        eprint(res.stderr)
+        logger.eprint(res.stderr)
         sys.exit(res.returncode)
 
     return res.stdout
@@ -127,7 +126,7 @@ class Git:
     def run_cmd(self, arguments, logger):
         command = ['git'] + arguments
         logger.print(' '.join([str(s) for s in command]))
-        return run(command, cwd=self.repo_root)
+        return run(command, logger, cwd=self.repo_root)
 
 
 class Plastic:
@@ -168,7 +167,7 @@ class Plastic:
         if self.pretend:
             return ''
 
-        stdout = run(command, cwd=self.workspace_root)
+        stdout = run(command, logger, cwd=self.workspace_root)
 
         logger.indent()
         for line in stdout.split('\n'):
@@ -318,7 +317,7 @@ def read_change_ops(config, logger):
                                 source_root_path=config.source_root_path,
                                 pretend=config.pretend))
         elif line:
-            eprint('Error: Unrecognized mode', parts)
+            logger.eprint('Error: Unrecognized mode', parts)
             sys.exit(1)
 
     return mods + adds + dels + moves
@@ -326,14 +325,13 @@ def read_change_ops(config, logger):
 
 def verify_plastic_repo_state(config, logger):
     if not config.plastic.is_workspace_clean(logger):
-        eprint(
-            f'Error: Plastic workspace needs to be clean')
+        logger.eprint(f'Error: Plastic workspace needs to be clean')
         return False
 
     from_version = version.from_git_release_tag(
         config.from_release_tag)
     if not from_version:
-        eprint(
+        logger.eprint(
             f'Error: Failed to parse version from {config.from_release_tag}')
         return False
 
@@ -341,23 +339,23 @@ def verify_plastic_repo_state(config, logger):
     build_version_file = config.plastic.to_workspace_path(
         build_version_filename)
     if not build_version_file.is_file():
-        eprint(f'{build_version_filename} does not exist')
+        logger.eprint(f'{build_version_filename} does not exist')
         return False
 
     checked_out_version = version.from_build_version_json(
         build_version_file.read_text())
     if checked_out_version != from_version:
-        eprint(f'Error: Plastic repo has version {checked_out_version}'
-               f' checked out, expected {from_version}')
+        logger.eprint(f'Error: Plastic repo has version {checked_out_version}'
+                      f' checked out, expected {from_version}')
         return False
 
     ueimporter_json = version.read_ueimporter_json(
         config.ueimporter_json_filename)
     if ueimporter_json and \
             (ueimporter_json.git_release_tag != config.from_release_tag):
-        eprint(f'Error: {config.ueimporter_json} says repo'
-               f' has UE version {checked_out_version}'
-               f' checked out, expected {from_version}')
+        logger.eprint(f'Error: {config.ueimporter_json} says repo'
+                      f' has UE version {checked_out_version}'
+                      f' checked out, expected {from_version}')
         return False
 
     return True
@@ -384,13 +382,13 @@ class Config:
 def create_config(args, logger):
     plastic = Plastic(args.plastic_workspace_root, args.pretend)
     if not plastic.to_workspace_path('.plastic').is_dir():
-        eprint(
+        logger.eprint(
             f'Error: Failed to find plastic repo at {args.plastic_workspace_root}')
         sys.exit(1)
 
     git = Git(args.git_repo_root)
     if not git.to_repo_path('.git').is_dir():
-        eprint(
+        logger.eprint(
             f'Error: Failed to find git repo at {args.git_repo_root}')
         sys.exit(1)
 
@@ -403,30 +401,30 @@ def create_config(args, logger):
         if ueimporter_json \
         else args.from_release_tag
     if not from_release_tag:
-        eprint(
+        logger.eprint(
             f'Error: Please specify a git release tag with either'
             f'a {args.ueimporter_json} file or --from-release-tag param')
         sys.exit(1)
 
     if not git.rev_parse(from_release_tag, logger):
-        eprint(
+        logger.eprint(
             f'Error: Failed to find release tag named {from_release_tag}')
         sys.exit(1)
 
     if not git.rev_parse(args.to_release_tag, logger):
-        eprint(
+        logger.eprint(
             f'Error: Failed to find release tag named {args.to_release_tag}')
         sys.exit(1)
 
     if not args.zip_package_root.is_dir():
-        eprint(
+        logger.eprint(
             f'Error: Failed to find zip package root {args.zip_package_root}')
         sys.exit(1)
 
     source_release_zip_path = args.zip_package_root.joinpath(
         f'UnrealEngine-{args.to_release_tag }')
     if not source_release_zip_path.is_dir():
-        eprint(
+        logger.eprint(
             f'Error: Failed to find release zip package'
             ' {source_release_zip_path}')
         sys.exit(1)
@@ -510,7 +508,8 @@ def main():
         elapsed_time = time.time() - start_timestamp
         remaining_time = ((elapsed_time / i) * (op_count - i)) if i else -1.0
         elapsed_time_delta = datetime.timedelta(seconds=round(elapsed_time))
-        remaining_time_delta = datetime.timedelta(seconds=round(remaining_time))
+        remaining_time_delta = datetime.timedelta(
+            seconds=round(remaining_time))
         logger.print(f'{i + 1}/{op_count} ({i * 100 / op_count:3.1f}%)'
                      f' - Elapsed {elapsed_time_delta}'
                      f' - Remaining {remaining_time_delta}')
@@ -518,7 +517,7 @@ def main():
         try:
             op.do()
         except OpException as e:
-            eprint(f'Error: {e.message}')
+            logger.eprint(f'Error: {e.message}')
             if continue_choice != Continue.ALWAYS:
                 continue_choice = prompt_user_wants_to_continue(logger)
                 if continue_choice == Continue.NO:
