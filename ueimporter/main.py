@@ -2,7 +2,6 @@ import argparse
 import datetime
 import enum
 import os
-import re
 import shutil
 import sys
 import time
@@ -237,42 +236,46 @@ class MoveOp(Operation):
 
 
 def read_change_ops(config, logger):
-    stdout = config.git_repo.diff(config.from_release_tag,
-                             config.to_release_tag, logger)
-    move_regex = re.compile('^r[0-9]*$')
+    try:
+        changes = git.read_changes(config.git_repo,
+                                   config.from_release_tag,
+                                   config.to_release_tag,
+                                   logger)
+    except git.ParseError as e:
+        logger.eprint(f'Error: {e}')
+        sys.exit(1)
+
     mods = []
     adds = []
     dels = []
     moves = []
-    for line in stdout.split('\n'):
-        parts = line.split('\t')
-        mode = parts[0].lower()
-        if mode == 'm':
-            mods.append(ModifyOp(parts[1],
+    for change in changes:
+        if change.__class__ == git.Modify:
+            mods.append(ModifyOp(change.filename,
                                  logger=logger,
                                  plastic=config.plastic,
                                  source_root_path=config.source_root_path,
                                  pretend=config.pretend))
-        elif mode == 'a':
-            adds.append(AddOp(parts[1],
+        elif change.__class__ == git.Add:
+            adds.append(AddOp(change.filename,
                               logger=logger,
                               plastic=config.plastic,
                               source_root_path=config.source_root_path,
                               pretend=config.pretend))
-        elif mode == 'd':
-            dels.append(DeleteOp(parts[1],
+        elif change.__class__ == git.Delete:
+            dels.append(DeleteOp(change.filename,
                                  logger=logger,
                                  plastic=config.plastic,
                                  source_root_path=config.source_root_path,
                                  pretend=config.pretend))
-        elif move_regex.match(mode):
-            moves.append(MoveOp(parts[1], parts[2],
+        elif change.__class__ == git.Move:
+            moves.append(MoveOp(change.filename, change.target_filename,
                                 logger=logger,
                                 plastic=config.plastic,
                                 source_root_path=config.source_root_path,
                                 pretend=config.pretend))
-        elif line:
-            logger.eprint('Error: Unrecognized mode', parts)
+        else:
+            logger.eprint('Error: Unrecognized change type {change}')
             sys.exit(1)
 
     return mods + adds + dels + moves
