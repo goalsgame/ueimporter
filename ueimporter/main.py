@@ -463,6 +463,8 @@ def main():
         logger.print(f'{i + 1}/{op_count}: {op}')
         op.do()
 
+    logger.print('')
+    logger.print(OP_SEPARATOR)
     logger.print(f'Updating {config.ueimporter_json_filename}'
                  f'with release tag {config.to_release_tag}')
 
