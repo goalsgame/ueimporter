@@ -62,6 +62,15 @@ def create_parser():
                         help="""
                         Set to print what is about to happen without
                         doing anything""")
+    parser.add_argument('--continue-on-error',
+                        action='store_true',
+                        help="""
+                        Continue on non-fatal errors while executing operations.
+                        Equivalent to answering "always" in the interactive
+                        prompt.
+                        All errors will be listed at the end, even when this
+                        option is set.
+                        """)
     return parser
 
 
@@ -490,7 +499,8 @@ def main():
 
     logger.print(f'Processing {op_count} operations')
     failed_ops = []
-    continue_choice = Continue.UNKNOWN
+    continue_choice = Continue.ALWAYS if args.continue_on_error \
+        else Continue.UNKNOWN
     for i, op in enumerate(ops):
         logger.print('')
         logger.print(OP_SEPARATOR)
