@@ -392,7 +392,12 @@ def create_config(args, logger):
     if not from_release_tag:
         logger.eprint(
             f'Error: Please specify a git release tag with either'
-            f'a {args.ueimporter_json} file or --from-release-tag param')
+            f'a {args.ueimporter_json} file or --from-release-tag')
+        sys.exit(1)
+
+    if not args.to_release_tag:
+        logger.eprint(
+            f'Error: Please specify a git release tag with --to-release-tag')
         sys.exit(1)
 
     if not git.rev_parse(from_release_tag, logger):
@@ -531,7 +536,7 @@ def main():
     logger.print('')
     logger.print(OP_SEPARATOR)
     logger.print(f'Updating {config.ueimporter_json_filename}'
-                 f'with release tag {config.to_release_tag}')
+                 f' with release tag {config.to_release_tag}')
 
     update_ueimporter_json(config, logger)
 
