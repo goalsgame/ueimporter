@@ -1,4 +1,5 @@
 import argparse
+import enum
 import os
 import subprocess
 import sys
@@ -448,6 +449,29 @@ def update_ueimporter_json(config, logger):
         config.plastic.checkout(config.ueimporter_json_filename, logger)
 
 
+class Continue(enum.Enum):
+    UNKNOWN = 0
+    NO = 1
+    YES = 1
+    ALWAYS = 2
+
+
+def prompt_user_wants_to_continue(logger):
+    while True:
+        logger.print('')
+        logger.print(OP_SEPARATOR)
+        user_input = input(
+            'Do you want to continue? [yes|always|no]: ').lower()
+        if user_input in ['yes', 'y']:
+            return Continue.YES
+        elif user_input in ['always', 'a']:
+            return Continue.ALWAYS
+        elif user_input in ['no', 'n']:
+            return Continue.NO
+        else:
+            logger.print(f'"{user_input}" is not a valid choice')
+
+
 def main():
     parser = create_parser()
     args = parser.parse_args()
@@ -466,6 +490,7 @@ def main():
 
     logger.print(f'Processing {op_count} operations')
     failed_ops = []
+    continue_choice = Continue.UNKNOWN
     for i, op in enumerate(ops):
         logger.print('')
         logger.print(OP_SEPARATOR)
@@ -474,6 +499,11 @@ def main():
             op.do()
         except OpException as e:
             eprint(f'Error: {e.message}')
+            if continue_choice != Continue.ALWAYS:
+                continue_choice = prompt_user_wants_to_continue(logger)
+                if continue_choice == Continue.NO:
+                    return 1
+
             failed_ops.append((op, e))
         except BaseException as e:
             raise e
@@ -489,17 +519,6 @@ def main():
             logger.indent()
             logger.print(f'{exception}')
             logger.deindent()
-
-        while True:
-            logger.print('')
-            logger.print(OP_SEPARATOR)
-            user_input = input('Do you want to continue? [yes|no]: ').lower()
-            if user_input in ['yes', 'y']:
-                break
-            elif user_input in ['no', 'n']:
-                return 1
-            else:
-                logger.print(f'"{user_input}" is not a valid choice')
 
     logger.print('')
     logger.print(OP_SEPARATOR)
