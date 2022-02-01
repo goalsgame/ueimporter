@@ -11,9 +11,9 @@ import time
 from pathlib import Path
 
 import ueimporter.version as version
+from ueimporter import Logger
 
 OP_SEPARATOR = '-' * 80
-INDENTATION = ' ' * 2
 
 
 def create_parser():
@@ -74,24 +74,6 @@ def create_parser():
                         option is set.
                         """)
     return parser
-
-
-class Logger:
-    def __init__(self):
-        self.indentation = ''
-
-    def print(self, line):
-        print(f'{self.indentation}{line}')
-
-    def eprint(self, *args, **kwargs):
-        print(*args, file=sys.stderr, **kwargs)
-
-    def indent(self):
-        self.indentation += INDENTATION
-
-    def deindent(self):
-        if len(self.indentation) >= len(INDENTATION):
-            self.indentation = self.indentation[:-len(INDENTATION)]
 
 
 def run(command, logger, cwd=None):
