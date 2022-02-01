@@ -8,10 +8,10 @@ import time
 
 from pathlib import Path
 
-import ueimporter.version as version
 import ueimporter.git as git
+import ueimporter.plastic as plastic
+import ueimporter.version as version
 from ueimporter import Logger
-from ueimporter import run
 
 SEPARATOR = '-' * 80
 
@@ -83,55 +83,6 @@ def create_parser():
     return parser
 
 
-class Plastic:
-    def __init__(self, workspace_root, pretend):
-        self.workspace_root = workspace_root
-        self.pretend = pretend
-
-    def to_workspace_path(self, path):
-        return self.workspace_root.joinpath(path)
-
-    def is_workspace_clean(self, logger):
-        arguments = ['status',
-                     '--machinereadable']
-        stdout = self.run_cmd(arguments, logger)
-        lines = stdout.split('\n')
-        if len(lines) == 1:
-            return True
-        elif len(lines) == 2:
-            return len(lines[1]) == 0
-        else:
-            return False
-
-    def add(self, path, logger):
-        return self.run_cmd(['add', path], logger)
-
-    def remove(self, path, logger):
-        return self.run_cmd(['remove', path], logger)
-
-    def checkout(self, path, logger):
-        self.run_cmd(['checkout', path], logger)
-
-    def move(self, from_path, to_path, logger):
-        self.run_cmd(['move', from_path, to_path], logger)
-
-    def run_cmd(self, arguments, logger):
-        command = ['cm'] + arguments
-        logger.print(' '.join([str(s) for s in command]))
-        if self.pretend:
-            return ''
-
-        stdout = run(command, logger, cwd=self.workspace_root)
-
-        logger.indent()
-        for line in stdout.split('\n'):
-            if len(line) > 0:
-                logger.print(line)
-        logger.deindent()
-
-        return stdout
-
-
 def is_empty_dir(directory):
     for _ in directory.iterdir():
         return False
@@ -144,9 +95,9 @@ class OpException(Exception):
 
 
 class Operation:
-    def __init__(self, desc, plastic, source_root_path, pretend, logger):
+    def __init__(self, desc, plastic_repo, source_root_path, pretend, logger):
         self.desc = desc
-        self.plastic = plastic
+        self.plastic_repo = plastic_repo
         self.source_root_path = source_root_path
         self.pretend = pretend
         self.logger = logger
@@ -158,19 +109,19 @@ class Operation:
         pass
 
     def ensure_directory_exists(self, directory):
-        directory = self.plastic.workspace_root.joinpath(directory)
+        directory = self.plastic_repo.workspace_root.joinpath(directory)
         if directory.is_dir():
             return
 
         self.logger.print(f'Creating {directory}')
         if not self.pretend:
             os.makedirs(directory)
-        self.plastic.add(directory, self.logger)
+        self.plastic_repo.add(directory, self.logger)
 
     def copy(self, filename):
         source_filename = self.source_root_path.joinpath(
             filename)
-        target_filename = self.plastic.to_workspace_path(filename)
+        target_filename = self.plastic_repo.to_workspace_path(filename)
 
         if not source_filename.is_file():
             raise OpException(f'Failed to find {source_filename}')
@@ -183,9 +134,9 @@ class Operation:
             shutil.copy2(source_filename, target_filename)
 
     def remove_empty_directories(self, directory):
-        directory = self.plastic.to_workspace_path(directory)
-        while directory != self.plastic.workspace_root and is_empty_dir(directory):
-            self.plastic.remove(directory, self.logger)
+        directory = self.plastic_repo.to_workspace_path(directory)
+        while directory != self.plastic_repo.workspace_root and is_empty_dir(directory):
+            self.plastic_repo.remove(directory, self.logger)
             directory = directory.parent
 
 
@@ -196,7 +147,7 @@ class AddOp(Operation):
 
     def do(self):
         self.copy(self.filename)
-        self.plastic.add(self.filename, self.logger)
+        self.plastic_repo.add(self.filename, self.logger)
 
 
 class ModifyOp(Operation):
@@ -205,7 +156,7 @@ class ModifyOp(Operation):
         self.filename = Path(filename)
 
     def do(self):
-        self.plastic.checkout(self.filename, self.logger)
+        self.plastic_repo.checkout(self.filename, self.logger)
         self.copy(self.filename)
 
 
@@ -215,7 +166,7 @@ class DeleteOp(Operation):
         self.filename = Path(filename)
 
     def do(self):
-        self.plastic.remove(self.filename, self.logger)
+        self.plastic_repo.remove(self.filename, self.logger)
         self.remove_empty_directories(self.filename.parent)
 
 
@@ -228,9 +179,9 @@ class MoveOp(Operation):
 
     def do(self):
         self.ensure_directory_exists(self.target_filename.parent)
-        self.plastic.move(self.source_filename,
-                          self.target_filename,
-                          self.logger)
+        self.plastic_repo.move(self.source_filename,
+                               self.target_filename,
+                               self.logger)
         self.copy(self.target_filename)
         self.remove_empty_directories(self.source_filename.parent)
 
@@ -253,25 +204,25 @@ def read_change_ops(config, logger):
         if change.__class__ == git.Modify:
             mods.append(ModifyOp(change.filename,
                                  logger=logger,
-                                 plastic=config.plastic,
+                                 plastic_repo=config.plastic_repo,
                                  source_root_path=config.source_root_path,
                                  pretend=config.pretend))
         elif change.__class__ == git.Add:
             adds.append(AddOp(change.filename,
                               logger=logger,
-                              plastic=config.plastic,
+                              plastic_repo=config.plastic_repo,
                               source_root_path=config.source_root_path,
                               pretend=config.pretend))
         elif change.__class__ == git.Delete:
             dels.append(DeleteOp(change.filename,
                                  logger=logger,
-                                 plastic=config.plastic,
+                                 plastic_repo=config.plastic_repo,
                                  source_root_path=config.source_root_path,
                                  pretend=config.pretend))
         elif change.__class__ == git.Move:
             moves.append(MoveOp(change.filename, change.target_filename,
                                 logger=logger,
-                                plastic=config.plastic,
+                                plastic_repo=config.plastic_repo,
                                 source_root_path=config.source_root_path,
                                 pretend=config.pretend))
         else:
@@ -282,7 +233,7 @@ def read_change_ops(config, logger):
 
 
 def verify_plastic_repo_state(config, logger):
-    if not config.plastic.is_workspace_clean(logger):
+    if not config.plastic_repo.is_workspace_clean(logger):
         logger.eprint(f'Error: Plastic workspace needs to be clean')
         return False
 
@@ -294,7 +245,7 @@ def verify_plastic_repo_state(config, logger):
         return False
 
     build_version_filename = 'Engine/Build/Build.version'
-    build_version_file = config.plastic.to_workspace_path(
+    build_version_file = config.plastic_repo.to_workspace_path(
         build_version_filename)
     if not build_version_file.is_file():
         logger.eprint(f'{build_version_filename} does not exist')
@@ -322,14 +273,14 @@ def verify_plastic_repo_state(config, logger):
 class Config:
     def __init__(self,
                  git_repo,
-                 plastic,
+                 plastic_repo,
                  from_release_tag,
                  to_release_tag,
                  source_root_path,
                  ueimporter_json_filename,
                  pretend):
         self.git_repo = git_repo
-        self.plastic = plastic
+        self.plastic_repo = plastic_repo
         self.from_release_tag = from_release_tag
         self.to_release_tag = to_release_tag
         self.source_root_path = source_root_path
@@ -338,8 +289,8 @@ class Config:
 
 
 def create_config(args, logger):
-    plastic = Plastic(args.plastic_workspace_root, args.pretend)
-    if not plastic.to_workspace_path('.plastic').is_dir():
+    plastic_repo = plastic.Repo(args.plastic_workspace_root, args.pretend)
+    if not plastic_repo.to_workspace_path('.plastic').is_dir():
         logger.eprint(
             f'Error: Failed to find plastic repo at {args.plastic_workspace_root}')
         sys.exit(1)
@@ -352,7 +303,7 @@ def create_config(args, logger):
 
     ueimporter_json_filename = args.ueimporter_json \
         if args.ueimporter_json.is_absolute() \
-        else plastic.to_workspace_path(args.ueimporter_json)
+        else plastic_repo.to_workspace_path(args.ueimporter_json)
 
     ueimporter_json = version.read_ueimporter_json(ueimporter_json_filename)
     from_release_tag = ueimporter_json.git_release_tag \
@@ -393,7 +344,7 @@ def create_config(args, logger):
         sys.exit(1)
 
     return Config(git_repo,
-                  plastic,
+                  plastic_repo,
                   from_release_tag,
                   args.to_release_tag,
                   source_release_zip_path,
@@ -416,9 +367,9 @@ def update_ueimporter_json(config, logger):
             force_overwrite=True)
 
     if ueimporter_created:
-        config.plastic.add(config.ueimporter_json_filename, logger)
+        config.plastic_repo.add(config.ueimporter_json_filename, logger)
     else:
-        config.plastic.checkout(config.ueimporter_json_filename, logger)
+        config.plastic_repo.checkout(config.ueimporter_json_filename, logger)
 
 
 class Continue(enum.Enum):
