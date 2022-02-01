@@ -4,7 +4,6 @@ import enum
 import os
 import re
 import shutil
-import subprocess
 import sys
 import time
 
@@ -12,6 +11,7 @@ from pathlib import Path
 
 import ueimporter.version as version
 from ueimporter import Logger
+from ueimporter import run
 
 OP_SEPARATOR = '-' * 80
 
@@ -81,17 +81,6 @@ def create_parser():
                         option is set.
                         """)
     return parser
-
-
-def run(command, logger, cwd=None):
-    res = subprocess.run(command, capture_output=True,
-                         encoding='utf-8', cwd=cwd)
-
-    if res.returncode != 0 or res.stderr:
-        logger.eprint(res.stderr)
-        sys.exit(res.returncode)
-
-    return res.stdout
 
 
 class Git:

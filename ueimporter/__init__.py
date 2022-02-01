@@ -1,5 +1,6 @@
 import os
 import sys
+import subprocess
 
 
 class Logger:
@@ -26,3 +27,15 @@ class Logger:
     def deindent(self):
         if len(self.indentation) >= len(Logger.INDENTATION):
             self.indentation = self.indentation[:-len(Logger.INDENTATION)]
+
+
+def run(command, logger, cwd=None):
+    res = subprocess.run(command, capture_output=True,
+                         encoding='utf-8', cwd=cwd)
+
+    if res.returncode != 0 or res.stderr:
+        logger.eprint(f'Error: returncode {res.returncode}')
+        logger.eprint(res.stderr)
+        sys.exit(res.returncode)
+
+    return res.stdout
