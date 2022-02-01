@@ -10,6 +10,7 @@ import time
 from pathlib import Path
 
 import ueimporter.version as version
+import ueimporter.git as git
 from ueimporter import Logger
 from ueimporter import run
 
@@ -81,30 +82,6 @@ def create_parser():
                         option is set.
                         """)
     return parser
-
-
-class Git:
-    def __init__(self, repo_root):
-        self.repo_root = repo_root
-
-    def to_repo_path(self, path):
-        return self.repo_root.joinpath(path)
-
-    def rev_parse(self, ref, logger):
-        return self.run_cmd(['rev-parse', ref], logger)
-
-    def diff(self, from_ref, to_ref, logger):
-        arguments = [
-            'diff',
-            '--name-status',
-            from_ref,
-            to_ref]
-        return self.run_cmd(arguments, logger)
-
-    def run_cmd(self, arguments, logger):
-        command = ['git'] + arguments
-        logger.print(' '.join([str(s) for s in command]))
-        return run(command, logger, cwd=self.repo_root)
 
 
 class Plastic:
@@ -260,7 +237,7 @@ class MoveOp(Operation):
 
 
 def read_change_ops(config, logger):
-    stdout = config.git.diff(config.from_release_tag,
+    stdout = config.git_repo.diff(config.from_release_tag,
                              config.to_release_tag, logger)
     move_regex = re.compile('^r[0-9]*$')
     mods = []
@@ -341,14 +318,14 @@ def verify_plastic_repo_state(config, logger):
 
 class Config:
     def __init__(self,
-                 git,
+                 git_repo,
                  plastic,
                  from_release_tag,
                  to_release_tag,
                  source_root_path,
                  ueimporter_json_filename,
                  pretend):
-        self.git = git
+        self.git_repo = git_repo
         self.plastic = plastic
         self.from_release_tag = from_release_tag
         self.to_release_tag = to_release_tag
@@ -364,8 +341,8 @@ def create_config(args, logger):
             f'Error: Failed to find plastic repo at {args.plastic_workspace_root}')
         sys.exit(1)
 
-    git = Git(args.git_repo_root)
-    if not git.to_repo_path('.git').is_dir():
+    git_repo = git.Repo(args.git_repo_root)
+    if not git_repo.to_repo_path('.git').is_dir():
         logger.eprint(
             f'Error: Failed to find git repo at {args.git_repo_root}')
         sys.exit(1)
@@ -389,12 +366,12 @@ def create_config(args, logger):
             f'Error: Please specify a git release tag with --to-release-tag')
         sys.exit(1)
 
-    if not git.rev_parse(from_release_tag, logger):
+    if not git_repo.rev_parse(from_release_tag, logger):
         logger.eprint(
             f'Error: Failed to find release tag named {from_release_tag}')
         sys.exit(1)
 
-    if not git.rev_parse(args.to_release_tag, logger):
+    if not git_repo.rev_parse(args.to_release_tag, logger):
         logger.eprint(
             f'Error: Failed to find release tag named {args.to_release_tag}')
         sys.exit(1)
@@ -412,7 +389,7 @@ def create_config(args, logger):
             ' {source_release_zip_path}')
         sys.exit(1)
 
-    return Config(git,
+    return Config(git_repo,
                   plastic,
                   from_release_tag,
                   args.to_release_tag,
