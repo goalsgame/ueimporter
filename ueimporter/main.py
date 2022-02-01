@@ -24,7 +24,7 @@ def create_parser():
                         Specifies the root of the UE git repo on disc.
 
                         Create this directory with
-                        $ git clone git@github.com:EpicGames/UnrealEngine.git
+                        "$ git clone git@github.com:EpicGames/UnrealEngine.git"
                         """)
     parser.add_argument('--from-release-tag',
                         help="""
