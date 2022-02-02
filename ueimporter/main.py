@@ -80,6 +80,12 @@ def create_parser():
                         All errors will be listed at the end, even when this
                         option is set.
                         """)
+    parser.add_argument('--git-command-cache',
+                        type=lambda p: Path(p).absolute(),
+                        help="""
+                        If set, results of heavy git commands will be stored
+                        in this directory.
+                        """)
     return parser
 
 
@@ -295,7 +301,7 @@ def create_config(args, logger):
             f'Error: Failed to find plastic repo at {args.plastic_workspace_root}')
         sys.exit(1)
 
-    git_repo = git.Repo(args.git_repo_root)
+    git_repo = git.Repo(args.git_repo_root, args.git_command_cache)
     if not git_repo.to_repo_path('.git').is_dir():
         logger.eprint(
             f'Error: Failed to find git repo at {args.git_repo_root}')

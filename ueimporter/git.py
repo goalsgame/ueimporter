@@ -1,5 +1,7 @@
-import ueimporter
+import os
 import re
+import ueimporter
+import unicodedata
 
 from pathlib import Path
 
@@ -58,9 +60,45 @@ class Move(Change):
         return f'Move {self.filename} to {self.target_filename}'
 
 
+def to_valid_filename(value):
+    value = str(value)
+    value = unicodedata.normalize('NFKD', value).encode(
+        'ascii', 'ignore').decode('ascii')
+    value = re.sub(r'[^\w\s-]', '', value.lower())
+    return re.sub(r'[-\s]+', '-', value).strip('-_')
+
+
+class CommandCache:
+    def __init__(self, command_cache_dir):
+        self._command_cache_dir = command_cache_dir
+        if not command_cache_dir.is_dir():
+            os.makedirs(command_cache_dir)
+
+    def has_entry(self, command):
+        filename = self.get_entry_filename(command)
+        return filename.is_file()
+
+    def read_entry(self, command):
+        filename = self.get_entry_filename(command)
+        if filename.is_file():
+            return filename.read_text(encoding='utf-8')
+        return None
+
+    def write_entry(self, command, stdout):
+        filename = self.get_entry_filename(command)
+        filename.write_text(stdout, encoding='utf-8')
+        pass
+
+    def get_entry_filename(self, command):
+        entry_name = to_valid_filename("_".join(command))
+        return self._command_cache_dir.joinpath(f'{entry_name}.stdout')
+
+
 class Repo:
-    def __init__(self, repo_root):
+    def __init__(self, repo_root, command_cache):
         self.repo_root = repo_root
+        self.command_cache = CommandCache(
+            command_cache) if command_cache else None
 
     def to_repo_path(self, path):
         return self.repo_root.joinpath(path)
@@ -74,7 +112,22 @@ class Repo:
             '--name-status',
             from_ref,
             to_ref]
-        return self.run_cmd(arguments, logger)
+        return self.run_cmd_cached(arguments, logger)
+
+    def run_cmd_cached(self, arguments, logger):
+        cache_command = ['git'] + arguments
+        if self.command_cache and self.command_cache.has_entry(cache_command):
+            logger.print(' '.join([str(s) for s in cache_command]))
+            logger.print('Reading stdout from command cache')
+            return self.command_cache.read_entry(cache_command)
+
+        stdout = self.run_cmd(arguments, logger)
+
+        if self.command_cache:
+            logger.print('Writing stdout to command cache')
+            self.command_cache.write_entry(cache_command, stdout)
+
+        return stdout
 
     def run_cmd(self, arguments, logger):
         command = ['git'] + arguments
