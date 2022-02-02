@@ -474,6 +474,7 @@ def main():
     if not config.pretend and not verify_plastic_repo_state(config, logger):
         return 1
 
+    start_timestamp = time.time()
     ops = read_change_ops(config, logger)
     op_count = len(ops)
     if op_count == 0:
@@ -484,7 +485,6 @@ def main():
     failed_ops = []
     continue_choice = Continue.ALWAYS if args.continue_on_error \
         else Continue.UNKNOWN
-    start_timestamp = time.time()
     for i, op in enumerate(ops):
         logger.print('')
         logger.print(OP_SEPARATOR)
@@ -528,6 +528,10 @@ def main():
                  f' with release tag {config.to_release_tag}')
 
     update_ueimporter_json(config, logger)
+
+    elapsed_time = time.time() - start_timestamp
+    elapsed_time_delta = datetime.timedelta(seconds=round(elapsed_time))
+    logger.print(f'Toal elapsed time {elapsed_time_delta}')
 
     return 0
 
