@@ -29,8 +29,11 @@ class Logger:
             self.indentation = self.indentation[:-len(Logger.INDENTATION)]
 
 
-def run(command, logger, cwd=None):
-    res = subprocess.run(command, capture_output=True,
+def run(command, logger, input_lines=None, cwd=None):
+    input = ('\n'.join(input_lines) + '\n') if input_lines else None
+    res = subprocess.run(command,
+                         capture_output=True,
+                         input=input,
                          encoding='utf-8', cwd=cwd)
 
     if res.returncode != 0 or res.stderr:
