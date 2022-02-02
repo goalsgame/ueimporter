@@ -13,7 +13,7 @@ import ueimporter.version as version
 from ueimporter import Logger
 from ueimporter import run
 
-OP_SEPARATOR = '-' * 80
+SEPARATOR = '-' * 80
 
 
 def create_parser():
@@ -451,7 +451,7 @@ class Continue(enum.Enum):
 def prompt_user_wants_to_continue(logger):
     while True:
         logger.print('')
-        logger.print(OP_SEPARATOR)
+        logger.print(SEPARATOR)
         user_input = input(
             'Do you want to continue? [yes|always|no]: ').lower()
         if user_input in ['yes', 'y']:
@@ -487,7 +487,7 @@ def main():
         else Continue.UNKNOWN
     for i, op in enumerate(ops):
         logger.print('')
-        logger.print(OP_SEPARATOR)
+        logger.print(SEPARATOR)
         elapsed_time = time.time() - start_timestamp
         remaining_time = ((elapsed_time / i) * (op_count - i)) if i else -1.0
         elapsed_time_delta = datetime.timedelta(seconds=round(elapsed_time))
@@ -512,18 +512,18 @@ def main():
 
     if len(failed_ops) > 0:
         logger.print('')
-        logger.print(OP_SEPARATOR)
+        logger.print(SEPARATOR)
         logger.print(f'Failed to process {len(failed_ops)} operations')
         for (failed_op, exception) in failed_ops:
             logger.print('')
-            logger.print(OP_SEPARATOR)
+            logger.print(SEPARATOR)
             logger.print(f'{failed_op}')
             logger.indent()
             logger.print(f'{exception}')
             logger.deindent()
 
     logger.print('')
-    logger.print(OP_SEPARATOR)
+    logger.print(SEPARATOR)
     logger.print(f'Updating {config.ueimporter_json_filename}'
                  f' with release tag {config.to_release_tag}')
 
