@@ -444,8 +444,8 @@ def update_ueimporter_json(config, logger):
 class Continue(enum.Enum):
     UNKNOWN = 0
     NO = 1
-    YES = 1
-    ALWAYS = 2
+    YES = 2
+    ALWAYS = 3
 
 
 def prompt_user_wants_to_continue(logger):
