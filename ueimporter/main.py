@@ -59,6 +59,13 @@ def create_parser():
                         stored.
                         Default is ueimporter.json.
                         """)
+    parser.add_argument('--log-file',
+                        type=lambda p: Path(p).absolute(),
+                        default=Path('.ueimporter.log'),
+                        help="""
+                        Name of log file where all output is saved.
+                        Default is .ueimporter.log.
+                        """)
     parser.add_argument('--pretend',
                         action='store_true',
                         help="""
@@ -467,7 +474,7 @@ def main():
     parser = create_parser()
     args = parser.parse_args()
 
-    logger = Logger()
+    logger = Logger(args.log_file)
     config = create_config(args, logger)
 
     if not config.pretend and not verify_plastic_repo_state(config, logger):
