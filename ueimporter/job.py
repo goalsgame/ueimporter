@@ -3,6 +3,7 @@ import os
 import sys
 
 import ueimporter.git as git
+from ueimporter import LogLevel
 
 
 def create_jobs(changes, plastic_repo, source_root_path, pretend, logger):
@@ -136,7 +137,7 @@ class Job:
     def copy(self, filenames):
         # Copy files from source to target plastic workspace
         for filename in filenames:
-            self.logger.print(filename)
+            self.logger.print(LogLevel.VERBOSE, filename)
             if self.pretend:
                 continue
 
@@ -151,7 +152,7 @@ class Job:
         dirs_to_create = find_dirs_to_create(
             self.plastic_repo.workspace_root, filenames)
         for directory in dirs_to_create:
-            self.logger.print(directory)
+            self.logger.print(LogLevel.NORMAL, directory)
             if self.pretend:
                 continue
 

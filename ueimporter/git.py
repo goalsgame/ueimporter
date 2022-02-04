@@ -4,6 +4,7 @@ import ueimporter
 import unicodedata
 
 from pathlib import Path
+from ueimporter import LogLevel
 
 
 class ParseError(Exception):
@@ -117,21 +118,21 @@ class Repo:
     def run_cmd_cached(self, arguments, logger):
         cache_command = ['git'] + arguments
         if self.command_cache and self.command_cache.has_entry(cache_command):
-            logger.print(' '.join([str(s) for s in cache_command]))
-            logger.print('Reading stdout from command cache')
+            logger.print(LogLevel.NORMAL, ' '.join([str(s) for s in cache_command]))
+            logger.print(LogLevel.NORMAL, 'Reading stdout from command cache')
             return self.command_cache.read_entry(cache_command)
 
         stdout = self.run_cmd(arguments, logger)
 
         if self.command_cache:
-            logger.print('Writing stdout to command cache')
+            logger.print(LogLevel.NORMAL, 'Writing stdout to command cache')
             self.command_cache.write_entry(cache_command, stdout)
 
         return stdout
 
     def run_cmd(self, arguments, logger):
         command = ['git'] + arguments
-        logger.print(' '.join([str(s) for s in command]))
+        logger.print(LogLevel.NORMAL, ' '.join([str(s) for s in command]))
         return ueimporter.run(command, logger, cwd=self.repo_root)
 
 

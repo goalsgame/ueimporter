@@ -11,6 +11,7 @@ import ueimporter.job
 import ueimporter.plastic as plastic
 import ueimporter.version as version
 from ueimporter import Logger
+from ueimporter import LogLevel
 
 SEPARATOR = '-' * 80
 BATCH_SIZE = 20
@@ -66,6 +67,13 @@ def create_parser():
                         help="""
                         Name of log file where all output is saved.
                         Default is .ueimporter.log.
+                        """)
+    parser.add_argument('--log-level',
+                        type=LogLevel,
+                        default=LogLevel.NORMAL,
+                        help="""
+                        Controls the detail level of logs that show up
+                        in STDOUT. All levels always ends up in the logfile.
                         """)
     parser.add_argument('--pretend',
                         action='store_true',
@@ -257,8 +265,8 @@ class Continue(enum.Enum):
 
 def prompt_user_wants_to_continue(logger):
     while True:
-        logger.print('')
-        logger.print(SEPARATOR)
+        logger.print(LogLevel.NORMAL, '')
+        logger.print(LogLevel.NORMAL, SEPARATOR)
         user_input = input(
             'Do you want to continue? [yes|always|no]: ').lower()
         if user_input in ['yes', 'y']:
@@ -268,7 +276,8 @@ def prompt_user_wants_to_continue(logger):
         elif user_input in ['no', 'n']:
             return Continue.NO
         else:
-            logger.print(f'"{user_input}" is not a valid choice')
+            logger.print(LogLevel.NORMAL,
+                         f'"{user_input}" is not a valid choice')
 
 
 def get_elapsed_time(start_timestamp):
@@ -329,8 +338,9 @@ class ProgressListener(ueimporter.job.JobProgressListener):
         batch_start = self._processed_change_count
         batch_end = batch_start + batch_size
         self._processed_change_count += batch_size
-        self._logger.print(SEPARATOR)
-        self._logger.print(f'{job_desc} - Processing '
+        self._logger.print(LogLevel.NORMAL, SEPARATOR)
+        self._logger.print(LogLevel.NORMAL,
+                           f'{job_desc} - Processing '
                            f'[{batch_start},{batch_end})'
                            f' / {self._total_change_count}'
                            f' - Elapsed {total_elapsed_time}'
@@ -342,16 +352,16 @@ class ProgressListener(ueimporter.job.JobProgressListener):
         batch_elapsed_time = self._active_time_estimate.end_batch()
         self._active_time_estimate = None
         self._logger.deindent()
-        self._logger.print('')
-        self._logger.print(f'Batch time {batch_elapsed_time}')
+        self._logger.print(LogLevel.NORMAL, '')
+        self._logger.print(LogLevel.NORMAL, f'Batch time {batch_elapsed_time}')
 
     def start_step(self, desc):
-        self._logger.print(desc)
+        self._logger.print(LogLevel.NORMAL, desc)
         self._logger.indent()
 
     def end_step(self, desc=None):
         self._logger.deindent()
-        self._logger.print(desc if desc else '')
+        self._logger.print(LogLevel.NORMAL, desc if desc else '')
 
     def estimate_remaining_time(self):
         remaining_time = datetime.timedelta(seconds=0)
@@ -364,7 +374,7 @@ def main():
     parser = create_parser()
     args = parser.parse_args()
 
-    logger = Logger(args.log_file)
+    logger = Logger(args.log_file, args.log_level)
     config = create_config(args, logger)
 
     if not config.pretend and not verify_plastic_repo_state(config, logger):
@@ -372,19 +382,20 @@ def main():
 
     start_timestamp = time.time()
     jobs = read_change_jobs(config, logger)
-    logger.print(f'Processing {len(jobs)} jobs')
+    logger.print(LogLevel.NORMAL, f'Processing {len(jobs)} jobs')
 
-    logger.print(f'Validating source files in {config.source_root_path}')
+    logger.print(LogLevel.NORMAL,
+                 f'Validating source files in {config.source_root_path}')
     continue_on_error = Continue.ALWAYS if args.continue_on_error \
         else Continue.UNKNOWN
     for job in jobs:
         changes_with_missing = job.prune_changes_with_missing_source_files()
         if not changes_with_missing:
             continue
-        logger.print(f'Found {len(changes_with_missing)} with missing files')
+        logger.print(LogLevel.NORMAL, f'Found {len(changes_with_missing)} with missing files')
         logger.indent()
         for change in changes_with_missing:
-            logger.print(f'{change}')
+            logger.print(LogLevel.NORMAL, f'{change}')
         logger.deindent()
 
         if continue_on_error == Continue.ALWAYS:
@@ -412,16 +423,16 @@ def main():
     for job in jobs:
         job.process(BATCH_SIZE, -1, progress_listener)
 
-    logger.print(SEPARATOR)
-    logger.print(f'Updating {config.ueimporter_json_filename}'
+    logger.print(LogLevel.NORMAL, SEPARATOR)
+    logger.print(LogLevel.NORMAL, f'Updating {config.ueimporter_json_filename}'
                  f' with release tag {config.to_release_tag}')
 
     update_ueimporter_json(config, logger)
-    logger.print('')
+    logger.print(LogLevel.NORMAL, '')
 
-    logger.print(SEPARATOR)
+    logger.print(LogLevel.NORMAL, SEPARATOR)
     total_elapsed_time = get_elapsed_time(start_timestamp)
-    logger.print(f'Total elapsed time {total_elapsed_time}')
+    logger.print(LogLevel.NORMAL, f'Total elapsed time {total_elapsed_time}')
 
     return 0
 

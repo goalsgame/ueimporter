@@ -1,20 +1,60 @@
 import os
 import sys
 import subprocess
+import enum
 
+
+class OrderedEnum(enum.Enum):
+    def __ge__(self, rhs):
+        if self.__class__ is rhs.__class__:
+            return self.value >= rhs.value
+        return NotImplemented
+
+    def __gt__(self, rhs):
+        if self.__class__ is rhs.__class__:
+            return self.value > rhs.value
+        return NotImplemented
+
+    def __le__(self, rhs):
+        if self.__class__ is rhs.__class__:
+            return self.value <= rhs.value
+        return NotImplemented
+
+    def __lt__(self, rhs):
+        if self.__class__ is rhs.__class__:
+            return self.value < rhs.value
+        return NotImplemented
+
+    def __eq__(self, rhs):
+        if self.__class__ is rhs.__class__:
+            return self.value == rhs.value
+        return NotImplemented
+
+    def __ne__(self, rhs):
+        if self.__class__ is rhs.__class__:
+            return self.value != rhs.value
+        return NotImplemented
+
+
+class LogLevel(OrderedEnum):
+    NORMAL = 0
+    VERBOSE = 1
+    DEBUG = 2
 
 class Logger:
     INDENTATION = ' ' * 2
 
-    def __init__(self, log_filename):
+    def __init__(self, log_filename, log_level):
         self.indentation = ''
         if log_filename and not log_filename.parent.is_dir():
             os.makedirs(log_filename.parent)
         self._logfile = open(log_filename, 'w') if log_filename else None
+        self._log_level = log_level
 
-    def print(self, line):
+    def print(self, log_level, line):
         log_line = f'{self.indentation}{line}'
-        print(log_line)
+        if log_level <= self._log_level:
+            print(log_line)
         if self._logfile:
             self._logfile.write(log_line + os.linesep)
 
