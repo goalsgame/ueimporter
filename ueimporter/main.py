@@ -363,12 +363,11 @@ class ProgressListener(ueimporter.job.JobProgressListener):
         self._logger.print(LogLevel.NORMAL, f'Batch time {batch_elapsed_time}')
 
     def start_step(self, desc):
-        self._logger.print(LogLevel.NORMAL, desc)
+        self._logger.print(LogLevel.NORMAL, f'* {desc}')
         self._logger.indent()
 
-    def end_step(self, desc=None):
+    def end_step(self):
         self._logger.deindent()
-        self._logger.print(LogLevel.NORMAL, desc if desc else '')
 
     def estimate_remaining_time(self):
         remaining_time = datetime.timedelta(seconds=0)

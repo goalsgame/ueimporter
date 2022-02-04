@@ -57,7 +57,7 @@ class Repo:
         if paths:
             command.append('-')
 
-        logger.print(LogLevel.NORMAL, ' '.join([str(s) for s in command]))
+        logger.print(LogLevel.VERBOSE, ' '.join([str(s) for s in command]))
 
         input_lines =  [str(p) for p in paths] if paths else None
         if input_lines:

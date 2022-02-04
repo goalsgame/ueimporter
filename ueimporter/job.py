@@ -177,6 +177,9 @@ class Job:
             if len(empty_parents) == 0:
                 break
 
+            for directory in empty_parents:
+                self.logger.print(LogLevel.NORMAL, directory)
+
             remove_count += len(empty_parents)
             self.plastic_repo.remove_multiple(empty_parents, self.logger)
             grand_parents = set([p.parent for p in empty_parents \
@@ -193,16 +196,17 @@ class AddJob(Job):
     def process_changes(self, changes, listener):
         filenames = [change.filename for change in changes]
 
-        listener.start_step('Creating parent directories in target')
+        listener.start_step('Create missing parent directories')
         dirs_to_add = self.create_target_parent_dirs(filenames)
-        listener.end_step(f'Created {len(dirs_to_add)} directories')
+        listener.end_step()
 
-        listener.start_step('Copy from source')
+        listener.start_step('Copy files from source')
         self.copy(filenames)
         listener.end_step()
 
-        listener.start_step('Adding files and directories to plastic')
         paths_to_add = sorted(dirs_to_add + filenames)
+        listener.start_step(f'Add {len(filenames)} files and'
+                            f' {len(dirs_to_add)} directories to plastic')
         self.plastic_repo.add_multiple(paths_to_add, self.logger)
         listener.end_step()
 
@@ -214,11 +218,11 @@ class ModifyJob(Job):
     def process_changes(self, changes, listener):
         filenames = [change.filename for change in changes]
 
-        listener.start_step('Checkout in plastic')
+        listener.start_step('Checkout files in plastic')
         self.plastic_repo.checkout_multiple(filenames, self.logger)
         listener.end_step()
 
-        listener.start_step('Copy from source')
+        listener.start_step('Copy files from source')
         self.copy(filenames)
         listener.end_step()
 
@@ -229,13 +233,13 @@ class DeleteJob(Job):
 
     def process_changes(self, changes, listener):
         filenames = [change.filename for change in changes]
-        listener.start_step('Remove from plastic')
+        listener.start_step('Remove files from plastic')
         self.plastic_repo.remove_multiple(filenames, self.logger)
         listener.end_step()
 
-        listener.start_step(f'Removing empty directories')
+        listener.start_step(f'Remove empty directories from plastic')
         remove_count = self.remove_empty_parent_dirs(filenames)
-        listener.end_step(f'Removed {remove_count} empty directories')
+        listener.end_step()
 
     def find_changes_with_missing_source_files(self):
         # A deleted file never exist in source, thus they can not be missing
@@ -249,28 +253,28 @@ class MoveJob(Job):
     def process_changes(self, changes, listener):
         target_filenames = [change.target_filename for change in changes]
 
-        listener.start_step('Creating parent directories in target')
+        listener.start_step('Create missing parent directories')
         dirs_to_add = self.create_target_parent_dirs(target_filenames)
-        listener.end_step(f'Created {len(dirs_to_add)} directories')
+        listener.end_step()
 
         if dirs_to_add:
-            listener.start_step('Adding created parent directories to plastic')
+            listener.start_step('Add created parent directories to plastic')
             self.plastic_repo.add_multiple(dirs_to_add, self.logger)
             listener.end_step()
 
-        listener.start_step(f'Moving {len(changes)} files')
+        listener.start_step(f'Move files in plastic')
         from_to_pairs = [(c.filename, c.target_filename) for c in changes]
         self.plastic_repo.move_multiple(from_to_pairs, self.logger)
         listener.end_step()
 
-        listener.start_step('Copy from source')
+        listener.start_step('Copy files from source')
         self.copy(target_filenames)
         listener.end_step()
 
-        listener.start_step(f'Removing empty directories')
+        listener.start_step(f'Remove empty directories from plastic')
         source_filenames = [change.filename for change in changes]
         remove_count = self.remove_empty_parent_dirs(source_filenames)
-        listener.end_step(f'Removed {remove_count} empty directories')
+        listener.end_step()
 
     def find_changes_with_missing_source_files(self):
         return [c for c in self.changes
