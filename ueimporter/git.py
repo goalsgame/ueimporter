@@ -69,7 +69,7 @@ class Move(Change):
                    f'  in {common}'
         else:
             return f'Move {self.filename}\n' \
-                   f'  to {self.target_filename}\n' \
+                   f'  to {self.target_filename}' \
 
 
 

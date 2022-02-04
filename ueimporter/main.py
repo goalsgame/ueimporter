@@ -351,7 +351,6 @@ class ProgressListener(ueimporter.job.JobProgressListener):
             change_desc = str(change)
             for line in change_desc.split('\n'):
                 self._logger.print(LogLevel.NORMAL, line)
-            self._logger.print(LogLevel.NORMAL, str(change))
         self._logger.print(LogLevel.NORMAL, '')
 
     def end_batch(self):
