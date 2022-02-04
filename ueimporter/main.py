@@ -548,3 +548,8 @@ def main():
     update_ueimporter_json(config, logger)
 
     return 0
+
+
+if __name__ == "__main__":
+    exit_code = main()
+    sys.exit(exit_code)
