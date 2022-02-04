@@ -276,14 +276,55 @@ def get_elapsed_time(start_timestamp):
     return datetime.timedelta(seconds=round(elapsed_time))
 
 
+class JobTimeEstimate:
+    def __init__(self, change_count):
+        self._job_change_count = change_count
+        self._processed_change_count = 0
+        self._batch_size = 0
+        self._batch_start_timestamp = 0
+        self._job_elapsed_time = 0
+
+    def start_batch(self, batch_size):
+        self._batch_size = batch_size
+        self._batch_start_timestamp = time.time()
+
+    def end_batch(self):
+        self._processed_change_count += self._batch_size
+        batch_elapsed_time = time.time() - self._batch_start_timestamp
+        self._job_elapsed_time += batch_elapsed_time
+        return datetime.timedelta(seconds=round(batch_elapsed_time))
+
+    def estimate_remaining_time(self):
+        if self._processed_change_count == 0:
+            return datetime.timedelta(seconds=0)
+
+        time_per_change = self._job_elapsed_time / self._processed_change_count
+        remaining_changes = self._job_change_count - self._processed_change_count
+        remaining_time = round(remaining_changes * time_per_change)
+        return datetime.timedelta(seconds=round(remaining_time))
+
+
 class ProgressListener(ueimporter.job.JobProgressListener):
     def __init__(self, logger, start_timestamp, total_change_count):
         self._start_timestamp = start_timestamp
         self._logger = logger
         self._total_change_count = total_change_count
         self._processed_change_count = 0
+        self._time_estimates = {}
+        self._active_time_estimate = None
+
+    def register_job(self, job):
+        assert job.desc not in self._time_estimates
+        change_count = len(job.changes)
+        self._time_estimates[job.desc] = JobTimeEstimate(change_count)
 
     def start_batch(self, job_desc, batch_size):
+        time_estimate = self._time_estimates.get(job_desc)
+        assert time_estimate
+        time_estimate.start_batch(batch_size)
+        self._active_time_estimate = time_estimate
+        remaining_time = self.estimate_remaining_time()
+
         total_elapsed_time = get_elapsed_time(self._start_timestamp)
         batch_start = self._processed_change_count
         batch_end = batch_start + batch_size
@@ -292,11 +333,17 @@ class ProgressListener(ueimporter.job.JobProgressListener):
         self._logger.print(f'{job_desc} - Processing '
                            f'[{batch_start},{batch_end})'
                            f' / {self._total_change_count}'
-                           f' - Elapsed {total_elapsed_time}')
+                           f' - Elapsed {total_elapsed_time}'
+                           f' - Remaining {remaining_time}')
         self._logger.indent()
 
     def end_batch(self):
+        assert self._active_time_estimate
+        batch_elapsed_time = self._active_time_estimate.end_batch()
+        self._active_time_estimate = None
         self._logger.deindent()
+        self._logger.print('')
+        self._logger.print(f'Batch time {batch_elapsed_time}')
 
     def start_step(self, desc):
         self._logger.print(desc)
@@ -305,6 +352,12 @@ class ProgressListener(ueimporter.job.JobProgressListener):
     def end_step(self, desc=None):
         self._logger.deindent()
         self._logger.print(desc if desc else '')
+
+    def estimate_remaining_time(self):
+        remaining_time = datetime.timedelta(seconds=0)
+        for time_estimate in self._time_estimates.values():
+            remaining_time += time_estimate.estimate_remaining_time()
+        return remaining_time
 
 
 def main():
@@ -352,6 +405,7 @@ def main():
     # Register jobs and process one batch each, to seed time estimates with
     # real world measurements
     for job in jobs:
+        progress_listener.register_job(job)
         job.process(BATCH_SIZE, BATCH_SIZE, progress_listener)
 
     # Process the rest of changes for each job in turn
