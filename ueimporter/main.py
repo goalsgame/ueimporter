@@ -327,7 +327,8 @@ class ProgressListener(ueimporter.job.JobProgressListener):
         change_count = len(job.changes)
         self._time_estimates[job.desc] = JobTimeEstimate(change_count)
 
-    def start_batch(self, job_desc, batch_size):
+    def start_batch(self, job_desc, changes):
+        batch_size = len(changes)
         time_estimate = self._time_estimates.get(job_desc)
         assert time_estimate
         time_estimate.start_batch(batch_size)

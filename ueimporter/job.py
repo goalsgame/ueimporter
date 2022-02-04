@@ -61,7 +61,7 @@ class JobProgressListener:
     def end_job(self):
         pass
 
-    def start_batch(self, batch_size):
+    def start_batch(self, changes):
         pass
 
     def end_batch(self):
@@ -116,8 +116,9 @@ class Job:
             change_count = min(change_count, max_change_count)
         for batch_start in range(0, change_count, batch_size):
             batch_end = min(batch_start + batch_size, change_count)
-            listener.start_batch(self._desc, batch_end - batch_start)
-            self.process_changes(changes[batch_start:batch_end], listener)
+            batch_changes = changes[batch_start:batch_end]
+            listener.start_batch(self._desc, batch_changes)
+            self.process_changes(batch_changes, listener)
             listener.end_batch()
         self._processed_change_count += change_count
 
