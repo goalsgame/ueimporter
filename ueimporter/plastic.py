@@ -33,6 +33,22 @@ class Repo:
     def move(self, from_path, to_path, logger):
         self.run_cmd(['move', from_path, to_path], logger)
 
+    def add_multiple(self, paths, logger):
+        for p in paths:
+            self.add(p, logger)
+
+    def remove_multiple(self, paths, logger):
+        for p in paths:
+            self.remove(p, logger)
+
+    def checkout_multiple(self, paths, logger):
+        for p in paths:
+            self.checkout(p, logger)
+
+    def move_multiple(self, from_to_path_pairs, logger):
+        for (from_p, to_p) in from_to_path_pairs:
+            self.move(from_p, to_p, logger)
+
     def run_cmd(self, arguments, logger):
         command = ['cm'] + arguments
         logger.print(' '.join([str(s) for s in command]))
