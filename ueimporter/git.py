@@ -1,4 +1,5 @@
 import os
+import os.path
 import re
 import ueimporter
 import unicodedata
@@ -58,7 +59,17 @@ class Move(Change):
         return self._target_filename
 
     def __str__(self):
-        return f'Move {self.filename} to {self.target_filename}'
+        common = Path(os.path.commonpath([self.filename, self.target_filename]))
+        if common:
+            from_relative = self.filename.relative_to(common)
+            to_relative = self.target_filename.relative_to(common)
+            return f'Move {from_relative}\n' \
+                   f'  to {to_relative}\n' \
+                   f'  in {common}'
+        else:
+            return f'Move {self.filename}\n' \
+                   f'  to {self.target_filename}\n' \
+
 
 
 def to_valid_filename(value):

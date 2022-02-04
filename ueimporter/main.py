@@ -341,12 +341,18 @@ class ProgressListener(ueimporter.job.JobProgressListener):
         self._processed_change_count += batch_size
         self._logger.print(LogLevel.NORMAL, SEPARATOR)
         self._logger.print(LogLevel.NORMAL,
-                           f'{job_desc} - Processing '
+                           f'Processing '
                            f'[{batch_start},{batch_end})'
                            f' / {self._total_change_count}'
                            f' - Elapsed {total_elapsed_time}'
                            f' - Remaining {remaining_time}')
         self._logger.indent()
+        for change in changes:
+            change_desc = str(change)
+            for line in change_desc.split('\n'):
+                self._logger.print(LogLevel.NORMAL, line)
+            self._logger.print(LogLevel.NORMAL, str(change))
+        self._logger.print(LogLevel.NORMAL, '')
 
     def end_batch(self):
         assert self._active_time_estimate
