@@ -8,6 +8,8 @@ class Logger:
 
     def __init__(self, log_filename):
         self.indentation = ''
+        if log_filename and not log_filename.parent.is_dir():
+            os.makedirs(log_filename.parent)
         self._logfile = open(log_filename, 'w') if log_filename else None
 
     def print(self, line):

@@ -62,7 +62,7 @@ def create_parser():
                         """)
     parser.add_argument('--log-file',
                         type=lambda p: Path(p).absolute(),
-                        default=Path('.ueimporter.log'),
+                        default=Path('.ueimporter/ueimporter.log'),
                         help="""
                         Name of log file where all output is saved.
                         Default is .ueimporter.log.
