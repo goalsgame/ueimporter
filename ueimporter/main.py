@@ -1,19 +1,20 @@
 import argparse
 import datetime
 import enum
-import os
-import shutil
 import sys
 import time
 
 from pathlib import Path
 
 import ueimporter.git as git
+import ueimporter.job
 import ueimporter.plastic as plastic
 import ueimporter.version as version
 from ueimporter import Logger
 
 SEPARATOR = '-' * 80
+BATCH_SIZE = 20
+MAX_CHANGES_PER_JOB = -1
 
 
 def create_parser():
@@ -89,110 +90,7 @@ def create_parser():
     return parser
 
 
-def is_empty_dir(directory):
-    for _ in directory.iterdir():
-        return False
-    return True
-
-
-class OpException(Exception):
-    def __init__(self, message):
-        self.message = message
-
-
-class Operation:
-    def __init__(self, desc, plastic_repo, source_root_path, pretend, logger):
-        self.desc = desc
-        self.plastic_repo = plastic_repo
-        self.source_root_path = source_root_path
-        self.pretend = pretend
-        self.logger = logger
-
-    def __str__(self):
-        return self.desc
-
-    def do(self):
-        pass
-
-    def ensure_directory_exists(self, directory):
-        directory = self.plastic_repo.workspace_root.joinpath(directory)
-        if directory.is_dir():
-            return
-
-        self.logger.print(f'Creating {directory}')
-        if not self.pretend:
-            os.makedirs(directory)
-        self.plastic_repo.add(directory, self.logger)
-
-    def copy(self, filename):
-        source_filename = self.source_root_path.joinpath(
-            filename)
-        target_filename = self.plastic_repo.to_workspace_path(filename)
-
-        if not source_filename.is_file():
-            raise OpException(f'Failed to find {source_filename}')
-
-        self.ensure_directory_exists(filename.parent)
-
-        self.logger.print(f'Copy from {source_filename}')
-        if not self.pretend:
-            # Copy file including file permissions and create/modify timstamps
-            shutil.copy2(source_filename, target_filename)
-
-    def remove_empty_directories(self, directory):
-        directory = self.plastic_repo.to_workspace_path(directory)
-        while directory != self.plastic_repo.workspace_root and is_empty_dir(directory):
-            self.plastic_repo.remove(directory, self.logger)
-            directory = directory.parent
-
-
-class AddOp(Operation):
-    def __init__(self, filename, **kwargs):
-        Operation.__init__(self, f'Add {filename}', **kwargs)
-        self.filename = Path(filename)
-
-    def do(self):
-        self.copy(self.filename)
-        self.plastic_repo.add(self.filename, self.logger)
-
-
-class ModifyOp(Operation):
-    def __init__(self, filename, **kwargs):
-        Operation.__init__(self, f'Modify {filename}', **kwargs)
-        self.filename = Path(filename)
-
-    def do(self):
-        self.plastic_repo.checkout(self.filename, self.logger)
-        self.copy(self.filename)
-
-
-class DeleteOp(Operation):
-    def __init__(self, filename, **kwargs):
-        Operation.__init__(self, f'Delete {filename}', **kwargs)
-        self.filename = Path(filename)
-
-    def do(self):
-        self.plastic_repo.remove(self.filename, self.logger)
-        self.remove_empty_directories(self.filename.parent)
-
-
-class MoveOp(Operation):
-    def __init__(self, source_filename, target_filename, **kwargs):
-        Operation.__init__(
-            self, f'Move {source_filename} to {target_filename}', **kwargs)
-        self.source_filename = Path(source_filename)
-        self.target_filename = Path(target_filename)
-
-    def do(self):
-        self.ensure_directory_exists(self.target_filename.parent)
-        self.plastic_repo.move(self.source_filename,
-                               self.target_filename,
-                               self.logger)
-        self.copy(self.target_filename)
-        self.remove_empty_directories(self.source_filename.parent)
-
-
-def read_change_ops(config, logger):
+def read_change_jobs(config, logger):
     try:
         changes = git.read_changes(config.git_repo,
                                    config.from_release_tag,
@@ -202,40 +100,12 @@ def read_change_ops(config, logger):
         logger.eprint(f'Error: {e}')
         sys.exit(1)
 
-    mods = []
-    adds = []
-    dels = []
-    moves = []
-    for change in changes:
-        if change.__class__ == git.Modify:
-            mods.append(ModifyOp(change.filename,
-                                 logger=logger,
-                                 plastic_repo=config.plastic_repo,
-                                 source_root_path=config.source_root_path,
-                                 pretend=config.pretend))
-        elif change.__class__ == git.Add:
-            adds.append(AddOp(change.filename,
-                              logger=logger,
-                              plastic_repo=config.plastic_repo,
-                              source_root_path=config.source_root_path,
-                              pretend=config.pretend))
-        elif change.__class__ == git.Delete:
-            dels.append(DeleteOp(change.filename,
-                                 logger=logger,
-                                 plastic_repo=config.plastic_repo,
-                                 source_root_path=config.source_root_path,
-                                 pretend=config.pretend))
-        elif change.__class__ == git.Move:
-            moves.append(MoveOp(change.filename, change.target_filename,
-                                logger=logger,
-                                plastic_repo=config.plastic_repo,
-                                source_root_path=config.source_root_path,
-                                pretend=config.pretend))
-        else:
-            logger.eprint('Error: Unrecognized change type {change}')
-            sys.exit(1)
-
-    return mods + adds + dels + moves
+    return ueimporter.job.create_jobs(
+        changes,
+        plastic_repo=config.plastic_repo,
+        source_root_path=config.source_root_path,
+        pretend=config.pretend,
+        logger=logger)
 
 
 def verify_plastic_repo_state(config, logger):
@@ -401,6 +271,42 @@ def prompt_user_wants_to_continue(logger):
             logger.print(f'"{user_input}" is not a valid choice')
 
 
+def get_elapsed_time(start_timestamp):
+    elapsed_time = time.time() - start_timestamp
+    return datetime.timedelta(seconds=round(elapsed_time))
+
+
+class ProgressListener(ueimporter.job.JobProgressListener):
+    def __init__(self, logger, start_timestamp, total_change_count):
+        self._start_timestamp = start_timestamp
+        self._logger = logger
+        self._total_change_count = total_change_count
+        self._processed_change_count = 0
+
+    def start_batch(self, job_desc, batch_size):
+        total_elapsed_time = get_elapsed_time(self._start_timestamp)
+        batch_start = self._processed_change_count
+        batch_end = batch_start + batch_size
+        self._processed_change_count += batch_size
+        self._logger.print(SEPARATOR)
+        self._logger.print(f'{job_desc} - Processing '
+                           f'[{batch_start},{batch_end})'
+                           f' / {self._total_change_count}'
+                           f' - Elapsed {total_elapsed_time}')
+        self._logger.indent()
+
+    def end_batch(self):
+        self._logger.deindent()
+
+    def start_step(self, desc):
+        self._logger.print(desc)
+        self._logger.indent()
+
+    def end_step(self, desc=None):
+        self._logger.deindent()
+        self._logger.print(desc if desc else '')
+
+
 def main():
     parser = create_parser()
     args = parser.parse_args()
@@ -412,63 +318,56 @@ def main():
         return 1
 
     start_timestamp = time.time()
-    ops = read_change_ops(config, logger)
-    op_count = len(ops)
-    if op_count == 0:
-        logger.print('Nothing to import, exiting')
-        return 0
+    jobs = read_change_jobs(config, logger)
+    logger.print(f'Processing {len(jobs)} jobs')
 
-    logger.print(f'Processing {op_count} operations')
-    failed_ops = []
-    continue_choice = Continue.ALWAYS if args.continue_on_error \
+    logger.print(f'Validating source files in {config.source_root_path}')
+    continue_on_error = Continue.ALWAYS if args.continue_on_error \
         else Continue.UNKNOWN
-    for i, op in enumerate(ops):
-        logger.print('')
-        logger.print(SEPARATOR)
-        elapsed_time = time.time() - start_timestamp
-        remaining_time = ((elapsed_time / i) * (op_count - i)) if i else -1.0
-        elapsed_time_delta = datetime.timedelta(seconds=round(elapsed_time))
-        remaining_time_delta = datetime.timedelta(
-            seconds=round(remaining_time))
-        logger.print(f'{i + 1}/{op_count} ({i * 100 / op_count:3.1f}%)'
-                     f' - Elapsed {elapsed_time_delta}'
-                     f' - Remaining {remaining_time_delta}')
-        logger.print(op)
-        try:
-            op.do()
-        except OpException as e:
-            logger.eprint(f'Error: {e.message}')
-            if continue_choice != Continue.ALWAYS:
-                continue_choice = prompt_user_wants_to_continue(logger)
-                if continue_choice == Continue.NO:
-                    return 1
+    for job in jobs:
+        changes_with_missing = job.prune_changes_with_missing_source_files()
+        if not changes_with_missing:
+            continue
+        logger.print(f'Found {len(changes_with_missing)} with missing files')
+        logger.indent()
+        for change in changes_with_missing:
+            logger.print(f'{change}')
+        logger.deindent()
 
-            failed_ops.append((op, e))
-        except BaseException as e:
-            raise e
+        if continue_on_error == Continue.ALWAYS:
+            continue
 
-    if len(failed_ops) > 0:
-        logger.print('')
-        logger.print(SEPARATOR)
-        logger.print(f'Failed to process {len(failed_ops)} operations')
-        for (failed_op, exception) in failed_ops:
-            logger.print('')
-            logger.print(SEPARATOR)
-            logger.print(f'{failed_op}')
-            logger.indent()
-            logger.print(f'{exception}')
-            logger.deindent()
+        continue_on_error = prompt_user_wants_to_continue(logger)
+        if continue_on_error == Continue.NO:
+            return 1
 
-    logger.print('')
+    if MAX_CHANGES_PER_JOB >= 0:
+        for job in jobs:
+            job.trim_trailing_changes(MAX_CHANGES_PER_JOB)
+
+    total_change_count = sum([len(j.changes) for j in jobs])
+    progress_listener = ProgressListener(
+        logger, start_timestamp, total_change_count)
+
+    # Register jobs and process one batch each, to seed time estimates with
+    # real world measurements
+    for job in jobs:
+        job.process(BATCH_SIZE, BATCH_SIZE, progress_listener)
+
+    # Process the rest of changes for each job in turn
+    for job in jobs:
+        job.process(BATCH_SIZE, -1, progress_listener)
+
     logger.print(SEPARATOR)
     logger.print(f'Updating {config.ueimporter_json_filename}'
                  f' with release tag {config.to_release_tag}')
 
     update_ueimporter_json(config, logger)
+    logger.print('')
 
-    elapsed_time = time.time() - start_timestamp
-    elapsed_time_delta = datetime.timedelta(seconds=round(elapsed_time))
-    logger.print(f'Toal elapsed time {elapsed_time_delta}')
+    logger.print(SEPARATOR)
+    total_elapsed_time = get_elapsed_time(start_timestamp)
+    logger.print(f'Total elapsed time {total_elapsed_time}')
 
     return 0
 
