@@ -59,7 +59,7 @@ class Repo:
 
         logger.print(LogLevel.VERBOSE, ' '.join([str(s) for s in command]))
 
-        input_lines =  [str(p) for p in paths] if paths else None
+        input_lines = [str(p) for p in paths] if paths else None
         if input_lines:
             logger.print(LogLevel.DEBUG, 'STDIN:')
             logger.indent()

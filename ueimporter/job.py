@@ -73,6 +73,7 @@ class JobProgressListener:
     def end_step(self, desc=None):
         pass
 
+
 class Job:
     def __init__(self, desc, plastic_repo, source_root_path, pretend, logger):
         self._desc = desc
@@ -166,6 +167,7 @@ class Job:
         parents = set([filename.parent for filename in filenames])
 
         plastic_workspace_root = self.plastic_repo.workspace_root
+
         def is_dir_empty(p):
             workspace_path = plastic_workspace_root.joinpath(p)
             for _ in workspace_path.iterdir():
@@ -182,7 +184,7 @@ class Job:
 
             remove_count += len(empty_parents)
             self.plastic_repo.remove_multiple(empty_parents, self.logger)
-            grand_parents = set([p.parent for p in empty_parents \
+            grand_parents = set([p.parent for p in empty_parents
                                  if not p.parent == plastic_workspace_root])
             parents = (parents - set(empty_parents)) | grand_parents
 

@@ -59,7 +59,8 @@ class Move(Change):
         return self._target_filename
 
     def __str__(self):
-        common = Path(os.path.commonpath([self.filename, self.target_filename]))
+        common = Path(os.path.commonpath(
+            [self.filename, self.target_filename]))
         if common:
             from_relative = self.filename.relative_to(common)
             to_relative = self.target_filename.relative_to(common)
@@ -129,7 +130,8 @@ class Repo:
     def run_cmd_cached(self, arguments, logger):
         cache_command = ['git'] + arguments
         if self.command_cache and self.command_cache.has_entry(cache_command):
-            logger.print(LogLevel.VERBOSE, ' '.join([str(s) for s in cache_command]))
+            logger.print(LogLevel.VERBOSE, ' '.join(
+                [str(s) for s in cache_command]))
             logger.print(LogLevel.VERBOSE, 'Reading stdout from command cache')
             return self.command_cache.read_entry(cache_command)
 

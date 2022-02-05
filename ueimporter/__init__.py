@@ -41,6 +41,7 @@ class LogLevel(OrderedEnum):
     VERBOSE = 1
     DEBUG = 2
 
+
 class Logger:
     INDENTATION = ' ' * 2
 

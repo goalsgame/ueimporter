@@ -398,7 +398,8 @@ def main():
         changes_with_missing = job.prune_changes_with_missing_source_files()
         if not changes_with_missing:
             continue
-        logger.print(LogLevel.NORMAL, f'Found {len(changes_with_missing)} with missing files')
+        logger.print(LogLevel.NORMAL,
+                     f'Found {len(changes_with_missing)} with missing files')
         logger.indent()
         for change in changes_with_missing:
             logger.print(LogLevel.NORMAL, f'{change}')
