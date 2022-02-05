@@ -32,7 +32,7 @@ def create_jobs(changes, plastic_repo, source_root_path, pretend, logger):
         move.add_change(m)
 
     jobs = [add, delete, modify, move]
-    return [job for job in jobs if len(job.changes) > 0]
+    return [job for job in jobs if len(job.ops) > 0]
 
 
 def find_dirs_to_create(target_root, filenames):
@@ -49,13 +49,13 @@ class JobProgressListener:
     def __init__(self):
         pass
 
-    def start_job(self, desc, change_count):
+    def start_job(self, desc, op_count):
         pass
 
     def end_job(self):
         pass
 
-    def start_batch(self, changes):
+    def start_batch(self, ops):
         pass
 
     def end_batch(self):
@@ -75,60 +75,61 @@ class Job:
         self.source_root_path = source_root_path
         self.pretend = pretend
         self.logger = logger
-        self._changes = []
-        self._processed_change_count = 0
+        self._ops = []
+        self._processed_op_count = 0
 
     @property
     def desc(self):
         return self._desc
 
     @property
-    def changes(self):
-        return self._changes
+    def ops(self):
+        return self._ops
 
     @property
-    def unprocessed_changes(self):
-        return self._changes[self._processed_change_count:]
+    def unprocessed_ops(self):
+        return self._ops[self._processed_op_count:]
 
     def add_change(self, change):
-        self._changes.append(change)
+        op = self._op_class(change)
+        self._ops.append(op)
 
-    def trim_trailing_changes(self, max_change_count):
-        assert max_change_count >= 0
-        max_change_count = min(len(self._changes), max_change_count)
-        self._changes = self._changes[0:max_change_count]
+    def trim_trailing_ops(self, max_op_count):
+        assert max_op_count >= 0
+        max_op_count = min(len(self._ops), max_op_count)
+        self._ops = self._ops[0:max_op_count]
 
-    def remove_changes(self, changes_to_remove):
-        if not changes_to_remove:
+    def remove_ops(self, ops_to_remove):
+        if not ops_to_remove:
             return
-        change_set = set(self.changes) - set(changes_to_remove)
-        self._changes = sorted(change_set, key=lambda m: m.filename)
+        op_set = set(self.ops) - set(ops_to_remove)
+        self._ops = sorted(op_set, key=lambda m: m.filename)
 
-    def process(self, batch_size, max_change_count, listener):
-        changes = self.unprocessed_changes
-        change_count = len(changes)
-        if max_change_count > 0:
-            change_count = min(change_count, max_change_count)
-        for batch_start in range(0, change_count, batch_size):
-            batch_end = min(batch_start + batch_size, change_count)
-            batch_changes = changes[batch_start:batch_end]
-            listener.start_batch(self._desc, batch_changes)
-            self.process_changes(batch_changes, listener)
+    def process(self, batch_size, max_op_count, listener):
+        ops = self.unprocessed_ops
+        op_count = len(ops)
+        if max_op_count > 0:
+            op_count = min(op_count, max_op_count)
+        for batch_start in range(0, op_count, batch_size):
+            batch_end = min(batch_start + batch_size, op_count)
+            batch_ops = ops[batch_start:batch_end]
+            listener.start_batch(self._desc, batch_ops)
+            self.process_ops(batch_ops, listener)
             listener.end_batch()
-        self._processed_change_count += change_count
+        self._processed_op_count += op_count
 
-    def process_changes(self, changes, listener):
+    def process_ops(self, ops, listener):
         pass
 
-    def prune_changes_with_missing_source_files(self):
-        assert self._processed_change_count == 0
-        missing = self.find_changes_with_missing_source_files()
-        self.remove_changes(missing)
+    def prune_ops_with_missing_source_files(self):
+        assert self._processed_op_count == 0
+        missing = self.find_ops_with_missing_source_files()
+        self.remove_ops(missing)
         return missing
 
-    def find_changes_with_missing_source_files(self):
-        return [c for c in self.changes
-                if not self.source_root_path.joinpath(c.filename).is_file()]
+    def find_ops_with_missing_source_files(self):
+        return [op for op in self.ops
+                if not self.source_root_path.joinpath(op.filename).is_file()]
 
     def copy(self, filenames):
         # Copy files from source to target plastic workspace
@@ -189,8 +190,8 @@ class AddJob(Job):
     def __init__(self, **kwargs):
         Job.__init__(self, 'Add', **kwargs)
 
-    def process_changes(self, changes, listener):
-        filenames = [change.filename for change in changes]
+    def process_ops(self, ops, listener):
+        filenames = [op.filename for op in ops]
 
         listener.start_step('Create missing parent directories')
         dirs_to_add = self.create_target_parent_dirs(filenames)
@@ -211,8 +212,8 @@ class ModifyJob(Job):
     def __init__(self, **kwargs):
         Job.__init__(self, 'Modify', **kwargs)
 
-    def process_changes(self, changes, listener):
-        filenames = [change.filename for change in changes]
+    def process_ops(self, ops, listener):
+        filenames = [op.filename for op in ops]
 
         listener.start_step('Checkout files in plastic')
         self.plastic_repo.checkout_multiple(filenames, self.logger)
@@ -227,8 +228,8 @@ class DeleteJob(Job):
     def __init__(self, **kwargs):
         Job.__init__(self, 'Delete', **kwargs)
 
-    def process_changes(self, changes, listener):
-        filenames = [change.filename for change in changes]
+    def process_ops(self, ops, listener):
+        filenames = [op.filename for op in ops]
         listener.start_step('Remove files from plastic')
         self.plastic_repo.remove_multiple(filenames, self.logger)
         listener.end_step()
@@ -237,7 +238,7 @@ class DeleteJob(Job):
         self.remove_empty_parent_dirs(filenames)
         listener.end_step()
 
-    def find_changes_with_missing_source_files(self):
+    def find_ops_with_missing_source_files(self):
         # A deleted file never exist in source, thus they can not be missing
         return []
 
@@ -246,8 +247,8 @@ class MoveJob(Job):
     def __init__(self, **kwargs):
         Job.__init__(self, 'Move', **kwargs)
 
-    def process_changes(self, changes, listener):
-        target_filenames = [change.target_filename for change in changes]
+    def process_ops(self, ops, listener):
+        target_filenames = [op.target_filename for op in ops]
 
         listener.start_step('Create missing parent directories')
         dirs_to_add = self.create_target_parent_dirs(target_filenames)
@@ -259,7 +260,7 @@ class MoveJob(Job):
             listener.end_step()
 
         listener.start_step(f'Move files in plastic')
-        from_to_pairs = [(c.filename, c.target_filename) for c in changes]
+        from_to_pairs = [(op.filename, op.target_filename) for op in ops]
         self.plastic_repo.move_multiple(from_to_pairs, self.logger)
         listener.end_step()
 
@@ -268,10 +269,10 @@ class MoveJob(Job):
         listener.end_step()
 
         listener.start_step(f'Remove empty directories from plastic')
-        source_filenames = [change.filename for change in changes]
+        source_filenames = [op.filename for op in ops]
         self.remove_empty_parent_dirs(source_filenames)
         listener.end_step()
 
-    def find_changes_with_missing_source_files(self):
-        return [c for c in self.changes
-                if not self.source_root_path.joinpath(c.target_filename).is_file()]
+    def find_ops_with_missing_source_files(self):
+        return [op for op in self.ops
+                if not self.source_root_path.joinpath(op.target_filename).is_file()]

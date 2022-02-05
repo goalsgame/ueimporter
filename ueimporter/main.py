@@ -15,7 +15,7 @@ from ueimporter import LogLevel
 
 SEPARATOR = '-' * 80
 BATCH_SIZE = 20
-MAX_CHANGES_PER_JOB = -1
+MAX_OPS_PER_JOB = -1
 
 
 def create_parser():
@@ -291,9 +291,9 @@ def get_elapsed_time(start_timestamp):
 
 
 class JobTimeEstimate:
-    def __init__(self, change_count):
-        self._job_change_count = change_count
-        self._processed_change_count = 0
+    def __init__(self, op_count):
+        self._job_op_count = op_count
+        self._processed_op_count = 0
         self._batch_size = 0
         self._batch_start_timestamp = 0
         self._job_elapsed_time = 0
@@ -303,37 +303,37 @@ class JobTimeEstimate:
         self._batch_start_timestamp = time.time()
 
     def end_batch(self):
-        self._processed_change_count += self._batch_size
+        self._processed_op_count += self._batch_size
         batch_elapsed_time = time.time() - self._batch_start_timestamp
         self._job_elapsed_time += batch_elapsed_time
         return datetime.timedelta(seconds=round(batch_elapsed_time))
 
     def estimate_remaining_time(self):
-        if self._processed_change_count == 0:
+        if self._processed_op_count == 0:
             return datetime.timedelta(seconds=0)
 
-        time_per_change = self._job_elapsed_time / self._processed_change_count
-        remaining_changes = self._job_change_count - self._processed_change_count
-        remaining_time = round(remaining_changes * time_per_change)
+        time_per_op = self._job_elapsed_time / self._processed_op_count
+        remaining_ops = self._job_op_count - self._processed_op_count
+        remaining_time = round(remaining_ops * time_per_op)
         return datetime.timedelta(seconds=round(remaining_time))
 
 
 class ProgressListener(ueimporter.job.JobProgressListener):
-    def __init__(self, logger, start_timestamp, total_change_count):
+    def __init__(self, logger, start_timestamp, total_op_count):
         self._start_timestamp = start_timestamp
         self._logger = logger
-        self._total_change_count = total_change_count
-        self._processed_change_count = 0
+        self._total_op_count = total_op_count
+        self._processed_op_count = 0
         self._time_estimates = {}
         self._active_time_estimate = None
 
     def register_job(self, job):
         assert job.desc not in self._time_estimates
-        change_count = len(job.changes)
-        self._time_estimates[job.desc] = JobTimeEstimate(change_count)
+        op_count = len(job.ops)
+        self._time_estimates[job.desc] = JobTimeEstimate(op_count)
 
-    def start_batch(self, job_desc, changes):
-        batch_size = len(changes)
+    def start_batch(self, job_desc, ops):
+        batch_size = len(ops)
         time_estimate = self._time_estimates.get(job_desc)
         assert time_estimate
         time_estimate.start_batch(batch_size)
@@ -341,20 +341,20 @@ class ProgressListener(ueimporter.job.JobProgressListener):
         remaining_time = self.estimate_remaining_time()
 
         total_elapsed_time = get_elapsed_time(self._start_timestamp)
-        batch_start = self._processed_change_count
+        batch_start = self._processed_op_count
         batch_end = batch_start + batch_size
-        self._processed_change_count += batch_size
+        self._processed_op_count += batch_size
         self._logger.print(LogLevel.NORMAL, SEPARATOR)
         self._logger.print(LogLevel.NORMAL,
                            f'Processing '
                            f'[{batch_start},{batch_end})'
-                           f' / {self._total_change_count}'
+                           f' / {self._total_op_count}'
                            f' - Elapsed {total_elapsed_time}'
                            f' - Remaining {remaining_time}')
         self._logger.indent()
-        for change in changes:
-            change_desc = str(change)
-            for line in change_desc.split('\n'):
+        for op in ops:
+            op_desc = str(op)
+            for line in op_desc.split('\n'):
                 self._logger.print(LogLevel.NORMAL, line)
         self._logger.print(LogLevel.NORMAL, '')
 
@@ -399,14 +399,14 @@ def main():
     continue_on_error = Continue.ALWAYS if args.continue_on_error \
         else Continue.UNKNOWN
     for job in jobs:
-        changes_with_missing = job.prune_changes_with_missing_source_files()
-        if not changes_with_missing:
+        ops_with_missing = job.prune_ops_with_missing_source_files()
+        if not ops_with_missing:
             continue
         logger.print(LogLevel.NORMAL,
-                     f'Found {len(changes_with_missing)} with missing files')
+                     f'Found {len(ops_with_missing)} with missing files')
         logger.indent()
-        for change in changes_with_missing:
-            logger.print(LogLevel.NORMAL, f'{change}')
+        for op in ops_with_missing:
+            logger.print(LogLevel.NORMAL, f'{op}')
         logger.deindent()
 
         if continue_on_error == Continue.ALWAYS:
@@ -416,13 +416,13 @@ def main():
         if continue_on_error == Continue.NO:
             return 1
 
-    if MAX_CHANGES_PER_JOB >= 0:
+    if MAX_OPS_PER_JOB >= 0:
         for job in jobs:
-            job.trim_trailing_changes(MAX_CHANGES_PER_JOB)
+            job.trim_trailing_ops(MAX_OPS_PER_JOB)
 
-    total_change_count = sum([len(j.changes) for j in jobs])
+    total_op_count = sum([len(j.ops) for j in jobs])
     progress_listener = ProgressListener(
-        logger, start_timestamp, total_change_count)
+        logger, start_timestamp, total_op_count)
 
     # Register jobs and process one batch each, to seed time estimates with
     # real world measurements
@@ -430,7 +430,7 @@ def main():
         progress_listener.register_job(job)
         job.process(BATCH_SIZE, BATCH_SIZE, progress_listener)
 
-    # Process the rest of changes for each job in turn
+    # Process the rest of ops for each job in turn
     for job in jobs:
         job.process(BATCH_SIZE, -1, progress_listener)
 
