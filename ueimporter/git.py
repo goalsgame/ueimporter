@@ -1,5 +1,4 @@
 import os
-import os.path
 import re
 import ueimporter
 import unicodedata
@@ -29,24 +28,15 @@ class Add(Change):
     def __init__(self, filename):
         Change.__init__(self, filename)
 
-    def __str__(self):
-        return f'Add {self.filename}'
-
 
 class Modify(Change):
     def __init__(self, filename):
         Change.__init__(self, filename)
 
-    def __str__(self):
-        return f'Modify {self.filename}'
-
 
 class Delete(Change):
     def __init__(self, filename):
         Change.__init__(self, filename)
-
-    def __str__(self):
-        return f'Delete {self.filename}'
 
 
 class Move(Change):
@@ -57,20 +47,6 @@ class Move(Change):
     @property
     def target_filename(self):
         return self._target_filename
-
-    def __str__(self):
-        common = Path(os.path.commonpath(
-            [self.filename, self.target_filename]))
-        if common:
-            from_relative = self.filename.relative_to(common)
-            to_relative = self.target_filename.relative_to(common)
-            return f'Move {from_relative}\n' \
-                   f'  to {to_relative}\n' \
-                   f'  in {common}'
-        else:
-            return f'Move {self.filename}\n' \
-                   f'  to {self.target_filename}' \
-
 
 
 def to_valid_filename(value):

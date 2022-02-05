@@ -1,8 +1,9 @@
-import shutil
 import os
-import sys
+import shutil
 
 from ueimporter import LogLevel
+
+import ueimporter.op as op
 
 
 def create_jobs(changes, plastic_repo, source_root_path, pretend, logger):
@@ -69,8 +70,9 @@ class JobProgressListener:
 
 
 class Job:
-    def __init__(self, desc, plastic_repo, source_root_path, pretend, logger):
+    def __init__(self, desc, op_class, plastic_repo, source_root_path, pretend, logger):
         self._desc = desc
+        self._op_class = op_class
         self.plastic_repo = plastic_repo
         self.source_root_path = source_root_path
         self.pretend = pretend
@@ -188,7 +190,7 @@ class Job:
 
 class AddJob(Job):
     def __init__(self, **kwargs):
-        Job.__init__(self, 'Add', **kwargs)
+        Job.__init__(self, 'Add', op.AddOp, **kwargs)
 
     def process_ops(self, ops, listener):
         filenames = [op.filename for op in ops]
@@ -210,7 +212,7 @@ class AddJob(Job):
 
 class ModifyJob(Job):
     def __init__(self, **kwargs):
-        Job.__init__(self, 'Modify', **kwargs)
+        Job.__init__(self, 'Modify', op.ModifyOp, **kwargs)
 
     def process_ops(self, ops, listener):
         filenames = [op.filename for op in ops]
@@ -226,7 +228,7 @@ class ModifyJob(Job):
 
 class DeleteJob(Job):
     def __init__(self, **kwargs):
-        Job.__init__(self, 'Delete', **kwargs)
+        Job.__init__(self, 'Delete', op.DeleteOp, **kwargs)
 
     def process_ops(self, ops, listener):
         filenames = [op.filename for op in ops]
@@ -245,7 +247,7 @@ class DeleteJob(Job):
 
 class MoveJob(Job):
     def __init__(self, **kwargs):
-        Job.__init__(self, 'Move', **kwargs)
+        Job.__init__(self, 'Move', op.MoveOp, **kwargs)
 
     def process_ops(self, ops, listener):
         target_filenames = [op.target_filename for op in ops]
