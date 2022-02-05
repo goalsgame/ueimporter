@@ -31,11 +31,8 @@ def create_jobs(changes, plastic_repo, source_root_path, pretend, logger):
     }
     for change in changes:
         job = job_dict.get(change.__class__, None)
-        if job:
-            job.add_change(change)
-        else:
-            logger.eprint('Error: Unrecognized change type {change}')
-            sys.exit(1)
+        assert job, f'Error: Unrecognized change type {change}'
+        job.add_change(change)
 
     jobs = [add, delete, modify, move]
     return [job for job in jobs if len(job.changes) > 0]
