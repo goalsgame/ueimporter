@@ -240,7 +240,7 @@ class DeleteJob(Job):
         listener.end_step()
 
         listener.start_step(f'Remove empty directories from plastic')
-        remove_count = self.remove_empty_parent_dirs(filenames)
+        self.remove_empty_parent_dirs(filenames)
         listener.end_step()
 
     def find_changes_with_missing_source_files(self):
@@ -275,7 +275,7 @@ class MoveJob(Job):
 
         listener.start_step(f'Remove empty directories from plastic')
         source_filenames = [change.filename for change in changes]
-        remove_count = self.remove_empty_parent_dirs(source_filenames)
+        self.remove_empty_parent_dirs(source_filenames)
         listener.end_step()
 
     def find_changes_with_missing_source_files(self):
