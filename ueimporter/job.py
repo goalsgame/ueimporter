@@ -2,7 +2,6 @@ import shutil
 import os
 import sys
 
-import ueimporter.git as git
 from ueimporter import LogLevel
 
 
@@ -23,16 +22,14 @@ def create_jobs(changes, plastic_repo, source_root_path, pretend, logger):
                    plastic_repo=plastic_repo,
                    source_root_path=source_root_path,
                    pretend=pretend)
-    job_dict = {
-        git.Add: add,
-        git.Delete: delete,
-        git.Modify: modify,
-        git.Move: move,
-    }
-    for change in changes:
-        job = job_dict.get(change.__class__, None)
-        assert job, f'Error: Unrecognized change type {change}'
-        job.add_change(change)
+    for a in changes.adds:
+        add.add_change(a)
+    for d in changes.deletes:
+        delete.add_change(d)
+    for m in changes.modifications:
+        modify.add_change(m)
+    for m in changes.moves:
+        move.add_change(m)
 
     jobs = [add, delete, modify, move]
     return [job for job in jobs if len(job.changes) > 0]

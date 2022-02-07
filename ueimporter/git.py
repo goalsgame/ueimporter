@@ -149,6 +149,14 @@ class Repo:
         return ueimporter.run(command, logger, cwd=self.repo_root)
 
 
+class Changes:
+    def __init__(self, modifications, adds, deletes, moves):
+        self.modifications = modifications
+        self.adds = adds
+        self.deletes = deletes
+        self.moves = moves
+
+
 def read_changes(git_repo, from_release_tag, to_release_tag, logger):
     stdout = git_repo.diff(from_release_tag,
                            to_release_tag, logger)
@@ -177,4 +185,4 @@ def read_changes(git_repo, from_release_tag, to_release_tag, logger):
     dels = sorted(dels, key=lambda m: m.filename)
     moves = sorted(moves, key=lambda m: m.filename)
 
-    return mods + adds + dels + moves
+    return Changes(mods, adds, dels, moves)
