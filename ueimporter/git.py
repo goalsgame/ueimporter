@@ -149,6 +149,26 @@ class Repo:
         return ueimporter.run(command, logger, cwd=self.repo_root)
 
 
+MOVE_REGEX = re.compile('^r[0-9]*$')
+
+
+def parse_change_line(line_number, line):
+    parts = line.split('\t')
+    mode = parts[0].lower()
+    if mode == 'm':
+        return Modify(parts[1])
+    elif mode == 'a':
+        return Add(parts[1])
+    elif mode == 'd':
+        return Delete(parts[1])
+    elif MOVE_REGEX.match(mode):
+        return Move(parts[1], parts[2])
+
+    raise ParseError(
+        f'Unrecognized git diff change mode on line {line_number}:'
+        f' "{line}"')
+
+
 class Changes:
     def __init__(self, modifications, adds, deletes, moves):
         self.modifications = modifications
@@ -160,29 +180,23 @@ class Changes:
 def read_changes(git_repo, from_release_tag, to_release_tag, logger):
     stdout = git_repo.diff(from_release_tag,
                            to_release_tag, logger)
-    move_regex = re.compile('^r[0-9]*$')
-    mods = []
-    adds = []
-    dels = []
-    moves = []
-    for line in stdout.split('\n'):
-        parts = line.split('\t')
-        mode = parts[0].lower()
-        if mode == 'm':
-            mods.append(Modify(parts[1]))
-        elif mode == 'a':
-            adds.append(Add(parts[1]))
-        elif mode == 'd':
-            dels.append(Delete(parts[1]))
-        elif move_regex.match(mode):
-            moves.append(Move(parts[1], parts[2]))
-        elif line:
-            raise ParseError(
-                f'Unrecognized git diff change mode "{mode}" in "{line}"')
 
-    mods = sorted(mods, key=lambda m: m.filename)
-    adds = sorted(adds, key=lambda m: m.filename)
-    dels = sorted(dels, key=lambda m: m.filename)
-    moves = sorted(moves, key=lambda m: m.filename)
+    changes_per_type = {
+        Modify: [],
+        Add: [],
+        Delete: [],
+        Move: []
+    }
+    for line_it, line in enumerate(stdout.split('\n')):
+        if not line:
+            continue
+
+        change = parse_change_line(line_it, line)
+        changes_per_type[type(change)].append(change)
+
+    mods = sorted(changes_per_type[Modify], key=lambda m: m.filename)
+    adds = sorted(changes_per_type[Add], key=lambda m: m.filename)
+    dels = sorted(changes_per_type[Delete], key=lambda m: m.filename)
+    moves = sorted(changes_per_type[Move], key=lambda m: m.filename)
 
     return Changes(mods, adds, dels, moves)
