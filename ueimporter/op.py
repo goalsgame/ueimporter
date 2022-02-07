@@ -1,6 +1,4 @@
-import os.path
-
-from pathlib import Path
+import ueimporter.path_util as path_util
 
 
 class Operation:
@@ -45,8 +43,7 @@ class MoveOp(Operation):
         return self._change.target_filename
 
     def __str__(self):
-        common = Path(os.path.commonpath(
-            [self.filename, self.target_filename]))
+        common = path_util.commonpath(self.filename, self.target_filename)
         if common:
             from_relative = self.filename.relative_to(common)
             to_relative = self.target_filename.relative_to(common)

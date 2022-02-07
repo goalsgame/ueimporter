@@ -3,7 +3,7 @@ import re
 import ueimporter
 import unicodedata
 
-from pathlib import Path
+from pathlib import PurePosixPath
 from ueimporter import LogLevel
 
 
@@ -17,7 +17,7 @@ class ParseError(Exception):
 
 class Change:
     def __init__(self, filename):
-        self._filename = Path(filename)
+        self._filename = PurePosixPath(filename)
 
     @property
     def filename(self):
@@ -42,7 +42,7 @@ class Delete(Change):
 class Move(Change):
     def __init__(self, source_filename, target_filename):
         Change.__init__(self, source_filename)
-        self._target_filename = Path(target_filename)
+        self._target_filename = PurePosixPath(target_filename)
 
     @property
     def target_filename(self):
