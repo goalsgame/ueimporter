@@ -102,6 +102,9 @@ def create_parser():
 
 def read_change_jobs(config, logger):
     try:
+        logger.print(LogLevel.NORMAL, f'Reading changes between'
+                     f' {config.from_release_tag}'
+                     f' and {config.to_release_tag} from git')
         changes = git.read_changes(config.git_repo,
                                    config.from_release_tag,
                                    config.to_release_tag,
