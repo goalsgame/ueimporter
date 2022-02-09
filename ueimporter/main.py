@@ -328,13 +328,13 @@ class ProgressListener(ueimporter.job.JobProgressListener):
         self._active_time_estimate = None
 
     def register_job(self, job):
-        assert job.desc not in self._time_estimates
+        assert job not in self._time_estimates
         op_count = len(job.ops)
-        self._time_estimates[job.desc] = JobTimeEstimate(op_count)
+        self._time_estimates[job] = JobTimeEstimate(op_count)
 
-    def start_batch(self, job_desc, ops):
+    def start_batch(self, job, ops):
         batch_size = len(ops)
-        time_estimate = self._time_estimates.get(job_desc)
+        time_estimate = self._time_estimates.get(job)
         assert time_estimate
         time_estimate.start_batch(batch_size)
         self._active_time_estimate = time_estimate

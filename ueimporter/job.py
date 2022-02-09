@@ -56,7 +56,7 @@ class JobProgressListener:
     def end_job(self):
         pass
 
-    def start_batch(self, ops):
+    def start_batch(self, job, ops):
         pass
 
     def end_batch(self):
@@ -115,7 +115,7 @@ class Job:
         for batch_start in range(0, op_count, batch_size):
             batch_end = min(batch_start + batch_size, op_count)
             batch_ops = ops[batch_start:batch_end]
-            listener.start_batch(self._desc, batch_ops)
+            listener.start_batch(self, batch_ops)
             self.process_ops(batch_ops, listener)
             listener.end_batch()
         self._processed_op_count += op_count
