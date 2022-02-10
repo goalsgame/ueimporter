@@ -41,6 +41,16 @@ class LogLevel(OrderedEnum):
     VERBOSE = 1
     DEBUG = 2
 
+    def __str__(self):
+        return self.name
+
+    @classmethod
+    def from_string(cls, s):
+        try:
+            return cls[s]
+        except KeyError:
+            raise ValueError()
+
 
 class Logger:
     INDENTATION = ' ' * 2

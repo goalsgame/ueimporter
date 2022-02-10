@@ -69,11 +69,13 @@ def create_parser():
                         Default is .ueimporter.log.
                         """)
     parser.add_argument('--log-level',
-                        type=LogLevel,
+                        type=LogLevel.from_string,
                         default=LogLevel.NORMAL,
+                        choices=list(LogLevel),
                         help="""
                         Controls the detail level of logs that show up
                         in STDOUT. All levels always ends up in the logfile.
+                        Default is 'normal'
                         """)
     parser.add_argument('--pretend',
                         action='store_true',
