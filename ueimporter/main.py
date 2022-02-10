@@ -394,27 +394,28 @@ def main():
     jobs = read_change_jobs(config, logger)
     logger.print(LogLevel.NORMAL, f'Processing {len(jobs)} jobs')
 
-    logger.print(LogLevel.NORMAL,
-                 f'Validating source files in {config.source_root_path}')
+    logger.print(LogLevel.NORMAL, f'Validating ops')
     continue_on_error = Continue.ALWAYS if args.continue_on_error \
         else Continue.UNKNOWN
+    invalid_ops = []
     for job in jobs:
-        ops_with_missing = job.prune_ops_with_missing_source_files()
-        if not ops_with_missing:
-            continue
-        logger.print(LogLevel.NORMAL,
-                     f'Found {len(ops_with_missing)} with missing files')
+        invalid_ops += job.find_invalid_ops()
+
+    if invalid_ops:
+        logger.print(LogLevel.NORMAL, f'Found {len(invalid_ops)} invalid ops')
         logger.indent()
-        for op in ops_with_missing:
-            logger.print(LogLevel.NORMAL, f'{op}')
+        for (op, err) in invalid_ops:
+            logger.eprint(f'{op}')
+            logger.eprint(f'{err}')
+
+            if continue_on_error == Continue.ALWAYS:
+                continue
+
+            continue_on_error = prompt_user_wants_to_continue(logger)
+            if continue_on_error == Continue.NO:
+                return 1
+
         logger.deindent()
-
-        if continue_on_error == Continue.ALWAYS:
-            continue
-
-        continue_on_error = prompt_user_wants_to_continue(logger)
-        if continue_on_error == Continue.NO:
-            return 1
 
     if MAX_OPS_PER_JOB >= 0:
         for job in jobs:

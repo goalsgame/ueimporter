@@ -146,11 +146,8 @@ class Job:
         max_op_count = min(len(self._ops), max_op_count)
         self._ops = self._ops[0:max_op_count]
 
-    def remove_ops(self, ops_to_remove):
-        if not ops_to_remove:
-            return
-        op_set = set(self.ops) - set(ops_to_remove)
-        self._ops = sorted(op_set, key=lambda m: m.filename)
+    def remove_op(self, op):
+        self._ops.remove(op)
 
     def process(self, batch_size, max_op_count, listener):
         ops = self.unprocessed_ops
@@ -168,15 +165,14 @@ class Job:
     def process_ops(self, ops, listener):
         pass
 
-    def prune_ops_with_missing_source_files(self):
-        assert self._processed_op_count == 0
-        missing = self.find_ops_with_missing_source_files()
-        self.remove_ops(missing)
-        return missing
-
-    def find_ops_with_missing_source_files(self):
-        return [op for op in self.ops
-                if not self.source_root_path.joinpath(op.filename).is_file()]
+    def find_invalid_ops(self):
+        invalid_ops = []
+        for op in self.ops:
+            validation = op.validate(self.source_root_path,
+                                     self.plastic_repo.workspace_root)
+            if not validation:
+                invalid_ops.append((op, validation))
+        return invalid_ops
 
     def copy(self, filenames):
         # Copy files from source to target plastic workspace
@@ -285,10 +281,6 @@ class DeleteJob(Job):
         self.remove_empty_parent_dirs(filenames)
         listener.end_step()
 
-    def find_ops_with_missing_source_files(self):
-        # A deleted file never exist in source, thus they can not be missing
-        return []
-
 
 class MoveJob(Job):
     def __init__(self, **kwargs):
@@ -319,7 +311,3 @@ class MoveJob(Job):
         source_filenames = [op.filename for op in ops]
         self.remove_empty_parent_dirs(source_filenames)
         listener.end_step()
-
-    def find_ops_with_missing_source_files(self):
-        return [op for op in self.ops
-                if not self.source_root_path.joinpath(op.target_filename).is_file()]
