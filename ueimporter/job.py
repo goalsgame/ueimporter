@@ -34,6 +34,7 @@ def create_jobs(changes, plastic_repo, source_root_path, pretend, logger):
     for m in changes.moves:
         move.add_change(m)
 
+    # Convert Del + Add of the same file to a Move
     all_per_file_changes = []
     for lower_filename, per_file_changes in changes.per_file_changes.items():
         logger.print(LogLevel.NORMAL, f'{lower_filename}')
@@ -44,7 +45,18 @@ def create_jobs(changes, plastic_repo, source_root_path, pretend, logger):
                 line += f' -> {change.target_filename}'
             logger.print(LogLevel.NORMAL, line)
 
-        all_per_file_changes += per_file_changes
+        for i in range(0, len(per_file_changes) - 1):
+            change = per_file_changes[i]
+            next_change = per_file_changes[i+1]
+            if type(change) != git.Delete or type(next_change) != git.Add:
+                continue
+
+            logger.print(LogLevel.NORMAL, 'Replacing Del + Add with Move')
+            per_file_changes[i] = git.Move(change.filename,
+                                           next_change.filename)
+            per_file_changes[i + 1] = None
+
+        all_per_file_changes += [c for c in per_file_changes if c]
         logger.deindent()
 
     change_to_job_type = {
