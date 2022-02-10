@@ -3,7 +3,9 @@ import shutil
 
 from ueimporter import LogLevel
 
+import ueimporter.git as git
 import ueimporter.op as op
+import ueimporter.path_util as path_util
 
 
 def create_jobs(changes, plastic_repo, source_root_path, pretend, logger):
@@ -32,8 +34,39 @@ def create_jobs(changes, plastic_repo, source_root_path, pretend, logger):
     for m in changes.moves:
         move.add_change(m)
 
+    all_per_file_changes = []
+    for lower_filename, per_file_changes in changes.per_file_changes.items():
+        logger.print(LogLevel.NORMAL, f'{lower_filename}')
+        logger.indent()
+        for change in per_file_changes:
+            line = f'{type(change).__name__} {change.filename}'
+            if type(change) == git.Move:
+                line += f' -> {change.target_filename}'
+            logger.print(LogLevel.NORMAL, line)
+
+        all_per_file_changes += per_file_changes
+        logger.deindent()
+
+    change_to_job_type = {
+        git.Add: AddJob,
+        git.Delete: DeleteJob,
+        git.Modify: ModifyJob,
+        git.Move: MoveJob
+    }
+    per_file_jobs = []
+    for change in all_per_file_changes:
+        per_file_job_type = change_to_job_type.get(type(change))
+        assert per_file_job_type, \
+            f'Failed to find job type for {type(change).__name__}'
+        per_file_job = per_file_job_type(logger=logger,
+                                         plastic_repo=plastic_repo,
+                                         source_root_path=source_root_path,
+                                         pretend=pretend)
+        per_file_job.add_change(change)
+        per_file_jobs.append(per_file_job)
+
     jobs = [add, delete, modify, move]
-    return [job for job in jobs if len(job.ops) > 0]
+    return per_file_jobs + [job for job in jobs if len(job.ops) > 0]
 
 
 def find_dirs_to_create(target_root, filenames):

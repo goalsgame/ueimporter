@@ -146,7 +146,8 @@ def parse_change_line(line_number, line):
 
 
 class Changes:
-    def __init__(self, modifications, adds, deletes, moves):
+    def __init__(self, per_file_changes, modifications, adds, deletes, moves):
+        self.per_file_changes = per_file_changes
         self.modifications = modifications
         self.adds = adds
         self.deletes = deletes
@@ -157,22 +158,35 @@ def read_changes(git_repo, from_release_tag, to_release_tag, logger):
     stdout = git_repo.diff(from_release_tag,
                            to_release_tag, logger)
 
+    filename_to_changes = {}
+    for line_it, line in enumerate(stdout.split('\n')):
+        if not line:
+            continue
+
+        change = parse_change_line(line_it + 1, line)
+        lower_filename = str(change.filename).lower()
+        if lower_filename in filename_to_changes:
+            filename_to_changes[lower_filename].append(change)
+        else:
+            filename_to_changes[lower_filename] = [change]
+
     changes_per_type = {
         Modify: [],
         Add: [],
         Delete: [],
         Move: []
     }
-    for line_it, line in enumerate(stdout.split('\n')):
-        if not line:
-            continue
-
-        change = parse_change_line(line_it, line)
-        changes_per_type[type(change)].append(change)
+    per_file_changes = {}
+    for lower_filename, changes in filename_to_changes.items():
+        if len(changes) == 1:
+            change = changes[0]
+            changes_per_type[type(change)].append(change)
+        else:
+            per_file_changes[lower_filename] = changes
 
     mods = sorted(changes_per_type[Modify], key=lambda m: m.filename)
     adds = sorted(changes_per_type[Add], key=lambda m: m.filename)
     dels = sorted(changes_per_type[Delete], key=lambda m: m.filename)
     moves = sorted(changes_per_type[Move], key=lambda m: m.filename)
 
-    return Changes(mods, adds, dels, moves)
+    return Changes(per_file_changes, mods, adds, dels, moves)
