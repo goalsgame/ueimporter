@@ -82,14 +82,12 @@ def create_parser():
                         help="""
                         Set to print what is about to happen without
                         doing anything""")
-    parser.add_argument('--continue-on-error',
+    parser.add_argument('--skip-invalid-ops',
                         action='store_true',
                         help="""
-                        Continue on non-fatal errors while executing operations.
-                        Equivalent to answering "always" in the interactive
+                        Skip operations that will fail when executed.
+                        Equivalent to answering "skip-always" in the interactive
                         prompt.
-                        All errors will be listed at the end, even when this
-                        option is set.
                         """)
     parser.add_argument('--git-command-cache',
                         type=lambda p: Path(p).absolute(),
@@ -265,7 +263,8 @@ class Continue(enum.Enum):
     UNKNOWN = 0
     NO = 1
     YES = 2
-    ALWAYS = 3
+    SKIP = 3
+    SKIP_ALL = 4
 
 
 def prompt_user_wants_to_continue(logger):
@@ -273,11 +272,13 @@ def prompt_user_wants_to_continue(logger):
         logger.print(LogLevel.NORMAL, '')
         logger.print(LogLevel.NORMAL, SEPARATOR)
         user_input = input(
-            'Do you want to continue? [yes|always|no]: ').lower()
+            'Do you want to continue? [yes|skip|skip-alll|no]: ').lower()
         if user_input in ['yes', 'y']:
             return Continue.YES
-        elif user_input in ['always', 'a']:
-            return Continue.ALWAYS
+        elif user_input in ['skip', 's']:
+            return Continue.SKIP
+        elif user_input in ['skip-all', 'a']:
+            return Continue.SKIP_ALL
         elif user_input in ['no', 'n']:
             return Continue.NO
         else:
@@ -395,25 +396,34 @@ def main():
     logger.print(LogLevel.NORMAL, f'Processing {len(jobs)} jobs')
 
     logger.print(LogLevel.NORMAL, f'Validating ops')
-    continue_on_error = Continue.ALWAYS if args.continue_on_error \
-        else Continue.UNKNOWN
+    skip_all_invalid_ops = args.skip_invalid_ops
     invalid_ops = []
+    invalid_op_count = 0
     for job in jobs:
-        invalid_ops += job.find_invalid_ops()
+        ops = job.find_invalid_ops()
+        invalid_ops.append((job, ops))
+        invalid_op_count += len(ops)
 
     if invalid_ops:
-        logger.print(LogLevel.NORMAL, f'Found {len(invalid_ops)} invalid ops')
         logger.indent()
-        for (op, err) in invalid_ops:
-            logger.eprint(f'{op}')
-            logger.eprint(f'{err}')
+        logger.print(LogLevel.NORMAL, f'Found {invalid_op_count} invalid ops')
+        for job, ops in invalid_ops:
+            for (op, err) in ops:
+                logger.eprint(f'{op}')
+                logger.eprint(f'{err}')
 
-            if continue_on_error == Continue.ALWAYS:
-                continue
+                if skip_all_invalid_ops:
+                    job.remove_op(op)
+                    continue
 
-            continue_on_error = prompt_user_wants_to_continue(logger)
-            if continue_on_error == Continue.NO:
-                return 1
+                continue_on_error = prompt_user_wants_to_continue(logger)
+                if continue_on_error == Continue.NO:
+                    return 1
+                elif continue_on_error == Continue.SKIP:
+                    job.remove_op(op)
+                elif continue_on_error == Continue.SKIP_ALL:
+                    skip_all_invalid_ops = True
+                    job.remove_op(op)
 
         logger.deindent()
 
