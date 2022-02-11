@@ -86,7 +86,7 @@ def create_parser():
                         action='store_true',
                         help="""
                         Skip operations that will fail when executed.
-                        Equivalent to answering "skip-always" in the interactive
+                        Equivalent to answering "skip-all" in the interactive
                         prompt.
                         """)
     parser.add_argument('--git-command-cache',
@@ -259,30 +259,33 @@ def update_ueimporter_json(config, logger):
         config.plastic_repo.checkout(config.ueimporter_json_filename, logger)
 
 
-class Continue(enum.Enum):
-    UNKNOWN = 0
-    NO = 1
-    YES = 2
-    SKIP = 3
-    SKIP_ALL = 4
+class InvalidOpResponse(enum.Enum):
+    SKIP = 1
+    SKIP_ALL = 2
+    ABORT = 3
 
 
-def prompt_user_wants_to_continue(logger):
+def prompt_user_invalid_op_response(logger):
     while True:
         logger.log('')
-        logger.log(SEPARATOR)
-        user_input = input(
-            'Do you want to continue? [yes|skip|skip-alll|no]: ').lower()
-        if user_input in ['yes', 'y']:
-            return Continue.YES
-        elif user_input in ['skip', 's']:
-            return Continue.SKIP
-        elif user_input in ['skip-all', 'a']:
-            return Continue.SKIP_ALL
-        elif user_input in ['no', 'n']:
-            return Continue.NO
+        user_input_map = {
+            'yes': InvalidOpResponse.SKIP,
+            'y': InvalidOpResponse.SKIP,
+            'all': InvalidOpResponse.SKIP_ALL,
+            'a': InvalidOpResponse.SKIP_ALL,
+
+            'no': InvalidOpResponse.ABORT,
+            'n': InvalidOpResponse.ABORT,
+        }
+        logger.log('Do you want to continue and skip this op?'
+                   ' [yes|all|no]: ', new_line=False)
+        user_input = input()
+        response = user_input_map.get(user_input.lower())
+        if response:
+            logger.log_verbose(f'{user_input}')
+            return response
         else:
-            logger.log(
+            logger.log_warning(
                 f'"{user_input}" is not a valid choice')
 
 
@@ -408,21 +411,23 @@ def main():
         logger.log(f'Found {invalid_op_count} invalid ops')
         for job, ops in invalid_ops:
             for (op, err) in ops:
+                logger.log(SEPARATOR)
                 logger.log_error(f'{op}')
-                logger.log_error(f'{err}')
+                logger.indent()
+                logger.log_warning(f'{err}')
 
-                if skip_all_invalid_ops:
-                    job.remove_op(op)
-                    continue
-
-                continue_on_error = prompt_user_wants_to_continue(logger)
-                if continue_on_error == Continue.NO:
+                response = InvalidOpResponse.SKIP_ALL if skip_all_invalid_ops \
+                    else prompt_user_invalid_op_response(logger)
+                if response == InvalidOpResponse.ABORT:
+                    logger.log("Aborting")
                     return 1
-                elif continue_on_error == Continue.SKIP:
+                elif response == InvalidOpResponse.SKIP or \
+                        response == InvalidOpResponse.SKIP_ALL:
                     job.remove_op(op)
-                elif continue_on_error == Continue.SKIP_ALL:
-                    skip_all_invalid_ops = True
-                    job.remove_op(op)
+                    logger.log("Skipping operation")
+                    skip_all_invalid_ops = \
+                        response == InvalidOpResponse.SKIP_ALL
+                logger.deindent()
 
         logger.deindent()
 

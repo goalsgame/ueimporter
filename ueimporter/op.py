@@ -13,12 +13,12 @@ class OpValidation:
     @classmethod
     def invalid_exist(cls, filename, root_path):
         return OpValidation.invalid(
-            f'{filename} already exist in {root_path}')
+            f'File already exist in {root_path}')
 
     @classmethod
     def invalid_not_exist(cls, filename, root_path):
         return OpValidation.invalid(
-            f'{filename} does not exist in {root_path}')
+            f'File does not exist in {root_path}')
 
     def __init__(self, is_valid, error_message):
         self._is_valid = is_valid
@@ -26,9 +26,9 @@ class OpValidation:
 
     def __str__(self):
         if self._is_valid:
-            return 'Valid'
+            return 'Valid operation'
         else:
-            return f'Invalid: {self._error_message}'
+            return f'{self._error_message}'
 
     def __bool__(self):
         return self._is_valid
