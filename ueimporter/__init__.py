@@ -64,20 +64,20 @@ class Logger:
         self._logfile = open(log_filename, 'w') if log_filename else None
         self._log_level = log_level
 
-    def log(self, line):
-        self.print(LogLevel.NORMAL, line)
+    def log(self, line, new_line=True):
+        self.print(LogLevel.NORMAL, line, new_line)
 
-    def log_verbose(self, line):
-        self.print(LogLevel.VERBOSE, line)
+    def log_verbose(self, line, new_line=True):
+        self.print(LogLevel.VERBOSE, line, new_line)
 
-    def log_debug(self, line):
-        self.print(LogLevel.DEBUG, line)
+    def log_debug(self, line, new_line=True):
+        self.print(LogLevel.DEBUG, line, new_line)
 
-    def log_warning(self, line):
-        self.print(LogLevel.WARNING, line)
+    def log_warning(self, line, new_line=True):
+        self.print(LogLevel.WARNING, line, new_line)
 
-    def log_error(self, line):
-        self.print(LogLevel.ERROR, line)
+    def log_error(self, line, new_line=True):
+        self.print(LogLevel.ERROR, line, new_line)
 
     def indent(self):
         self.indentation += Logger.INDENTATION
@@ -86,14 +86,18 @@ class Logger:
         if len(self.indentation) >= len(Logger.INDENTATION):
             self.indentation = self.indentation[:-len(Logger.INDENTATION)]
 
-    def print(self, log_level, line):
-        indentation = self.indentation if log_level > LogLevel.ERROR else ''
+    def print(self, log_level, line, new_line):
+        indentation = self.indentation \
+            if log_level > LogLevel.ERROR and line \
+            else ''
         log_line = f'{indentation}{line}'
+        if new_line:
+            log_line += '\n'
         if log_level <= self._log_level:
             stream = sys.stderr if log_level == LogLevel.ERROR else sys.stdout
-            print(log_line, file=stream)
+            stream.write(log_line)
         if self._logfile:
-            self._logfile.write(log_line + os.linesep)
+            self._logfile.write(log_line)
 
 
 def run(command, logger, input_lines=None, cwd=None):
