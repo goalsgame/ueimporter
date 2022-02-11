@@ -108,7 +108,7 @@ def read_change_jobs(config, logger):
                                    config.to_release_tag,
                                    logger)
     except git.ParseError as e:
-        logger.eprint(f'Error: {e}')
+        logger.log_error(f'Error: {e}')
         sys.exit(1)
 
     return ueimporter.job.create_jobs(
@@ -121,13 +121,13 @@ def read_change_jobs(config, logger):
 
 def verify_plastic_repo_state(config, logger):
     if not config.plastic_repo.is_workspace_clean(logger):
-        logger.eprint(f'Error: Plastic workspace needs to be clean')
+        logger.log_error(f'Error: Plastic workspace needs to be clean')
         return False
 
     from_version = version.from_git_release_tag(
         config.from_release_tag)
     if not from_version:
-        logger.eprint(
+        logger.log_error(
             f'Error: Failed to parse version from {config.from_release_tag}')
         return False
 
@@ -135,23 +135,23 @@ def verify_plastic_repo_state(config, logger):
     build_version_file = config.plastic_repo.to_workspace_path(
         build_version_filename)
     if not build_version_file.is_file():
-        logger.eprint(f'{build_version_filename} does not exist')
+        logger.log_error(f'{build_version_filename} does not exist')
         return False
 
     checked_out_version = version.from_build_version_json(
         build_version_file.read_text())
     if checked_out_version != from_version:
-        logger.eprint(f'Error: Plastic repo has version {checked_out_version}'
-                      f' checked out, expected {from_version}')
+        logger.log_error(f'Error: Plastic repo has version {checked_out_version}'
+                         f' checked out, expected {from_version}')
         return False
 
     ueimporter_json = version.read_ueimporter_json(
         config.ueimporter_json_filename)
     if ueimporter_json and \
             (ueimporter_json.git_release_tag != config.from_release_tag):
-        logger.eprint(f'Error: {config.ueimporter_json} says repo'
-                      f' has UE version {checked_out_version}'
-                      f' checked out, expected {from_version}')
+        logger.log_error(f'Error: {config.ueimporter_json} says repo'
+                         f' has UE version {checked_out_version}'
+                         f' checked out, expected {from_version}')
         return False
 
     return True
@@ -178,13 +178,13 @@ class Config:
 def create_config(args, logger):
     plastic_repo = plastic.Repo(args.plastic_workspace_root, args.pretend)
     if not plastic_repo.to_workspace_path('.plastic').is_dir():
-        logger.eprint(
+        logger.log_error(
             f'Error: Failed to find plastic repo at {args.plastic_workspace_root}')
         sys.exit(1)
 
     git_repo = git.Repo(args.git_repo_root, args.git_command_cache)
     if not git_repo.to_repo_path('.git').is_dir():
-        logger.eprint(
+        logger.log_error(
             f'Error: Failed to find git repo at {args.git_repo_root}')
         sys.exit(1)
 
@@ -197,35 +197,35 @@ def create_config(args, logger):
         if ueimporter_json \
         else args.from_release_tag
     if not from_release_tag:
-        logger.eprint(
+        logger.log_error(
             f'Error: Please specify a git release tag with either'
             f'a {args.ueimporter_json} file or --from-release-tag')
         sys.exit(1)
 
     if not args.to_release_tag:
-        logger.eprint(
+        logger.log_error(
             f'Error: Please specify a git release tag with --to-release-tag')
         sys.exit(1)
 
     if not git_repo.rev_parse(from_release_tag, logger):
-        logger.eprint(
+        logger.log_error(
             f'Error: Failed to find release tag named {from_release_tag}')
         sys.exit(1)
 
     if not git_repo.rev_parse(args.to_release_tag, logger):
-        logger.eprint(
+        logger.log_error(
             f'Error: Failed to find release tag named {args.to_release_tag}')
         sys.exit(1)
 
     if not args.zip_package_root.is_dir():
-        logger.eprint(
+        logger.log_error(
             f'Error: Failed to find zip package root {args.zip_package_root}')
         sys.exit(1)
 
     source_release_zip_path = args.zip_package_root.joinpath(
         f'UnrealEngine-{args.to_release_tag }')
     if not source_release_zip_path.is_dir():
-        logger.eprint(
+        logger.log_error(
             f'Error: Failed to find release zip package'
             ' {source_release_zip_path}')
         sys.exit(1)
@@ -409,8 +409,8 @@ def main():
         logger.print(LogLevel.NORMAL, f'Found {invalid_op_count} invalid ops')
         for job, ops in invalid_ops:
             for (op, err) in ops:
-                logger.eprint(f'{op}')
-                logger.eprint(f'{err}')
+                logger.log_error(f'{op}')
+                logger.log_error(f'{err}')
 
                 if skip_all_invalid_ops:
                     job.remove_op(op)

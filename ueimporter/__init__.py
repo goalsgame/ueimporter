@@ -37,6 +37,7 @@ class OrderedEnum(enum.Enum):
 
 
 class LogLevel(OrderedEnum):
+    ERROR = -1
     NORMAL = 0
     VERBOSE = 1
     DEBUG = 2
@@ -62,17 +63,8 @@ class Logger:
         self._logfile = open(log_filename, 'w') if log_filename else None
         self._log_level = log_level
 
-    def print(self, log_level, line):
-        log_line = f'{self.indentation}{line}'
-        if log_level <= self._log_level:
-            print(log_line)
-        if self._logfile:
-            self._logfile.write(log_line + os.linesep)
-
-    def eprint(self, *args, **kwargs):
-        print(*args, file=sys.stderr, **kwargs)
-        if self._logfile:
-            print(*args, file=self._logfile, **kwargs)
+    def log_error(self, line):
+        self.print(LogLevel.ERROR, line)
 
     def indent(self):
         self.indentation += Logger.INDENTATION
@@ -80,6 +72,15 @@ class Logger:
     def deindent(self):
         if len(self.indentation) >= len(Logger.INDENTATION):
             self.indentation = self.indentation[:-len(Logger.INDENTATION)]
+
+    def print(self, log_level, line):
+        indentation = self.indentation if log_level > LogLevel.ERROR else ''
+        log_line = f'{indentation}{line}'
+        if log_level <= self._log_level:
+            stream = sys.stderr if log_level == LogLevel.ERROR else sys.stdout
+            print(log_line, file=stream)
+        if self._logfile:
+            self._logfile.write(log_line + os.linesep)
 
 
 def run(command, logger, input_lines=None, cwd=None):
@@ -90,8 +91,8 @@ def run(command, logger, input_lines=None, cwd=None):
                          encoding='utf-8', cwd=cwd)
 
     if res.returncode != 0 or res.stderr:
-        logger.eprint(f'Error: returncode {res.returncode}')
-        logger.eprint(res.stderr)
+        logger.log_error(f'Error: returncode {res.returncode}')
+        logger.log_error(res.stderr)
         sys.exit(res.returncode)
 
     return res.stdout
