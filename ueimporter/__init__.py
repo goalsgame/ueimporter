@@ -69,6 +69,9 @@ class Logger:
     def log_verbose(self, line):
         self.print(LogLevel.VERBOSE, line)
 
+    def log_debug(self, line):
+        self.print(LogLevel.DEBUG, line)
+
     def log_error(self, line):
         self.print(LogLevel.ERROR, line)
 

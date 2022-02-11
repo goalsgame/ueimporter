@@ -1,7 +1,5 @@
 import ueimporter
 
-from ueimporter import LogLevel
-
 
 class Repo:
     def __init__(self, workspace_root, pretend):
@@ -61,10 +59,10 @@ class Repo:
 
         input_lines = [str(p) for p in paths] if paths else None
         if input_lines:
-            logger.print(LogLevel.DEBUG, 'STDIN:')
+            logger.log_debug('STDIN:')
             logger.indent()
             for line in input_lines:
-                logger.print(LogLevel.DEBUG, line)
+                logger.log_debug(line)
             logger.deindent()
 
         if self.pretend:
@@ -78,7 +76,7 @@ class Repo:
         logger.indent()
         for line in stdout.split('\n'):
             if len(line) > 0:
-                logger.print(LogLevel.DEBUG, line)
+                logger.log_debug(line)
         logger.deindent()
 
         return stdout
