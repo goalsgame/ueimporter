@@ -363,6 +363,7 @@ class MoveJob(Job):
         self.remove_empty_parent_dirs(source_filenames)
         listener.end_step()
 
+
 # Register operations, and set up descriptions
 _JOB_DESC_REGEX = re.compile('^([a-zA-Z]*)Job$')
 JOB_CLASSES = [AddJob, DeleteJob, ModifyJob, MoveJob]
