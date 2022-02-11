@@ -37,7 +37,8 @@ class OrderedEnum(enum.Enum):
 
 
 class LogLevel(OrderedEnum):
-    ERROR = -1
+    ERROR = -2
+    WARNING = -1
     NORMAL = 0
     VERBOSE = 1
     DEBUG = 2
@@ -71,6 +72,9 @@ class Logger:
 
     def log_debug(self, line):
         self.print(LogLevel.DEBUG, line)
+
+    def log_warning(self, line):
+        self.print(LogLevel.WARNING, line)
 
     def log_error(self, line):
         self.print(LogLevel.ERROR, line)
