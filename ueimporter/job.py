@@ -37,13 +37,13 @@ def create_jobs(changes, plastic_repo, source_root_path, pretend, logger):
     # Convert Del + Add of the same file to a Move
     all_per_file_changes = []
     for lower_filename, per_file_changes in changes.per_file_changes.items():
-        logger.print(LogLevel.NORMAL, f'{lower_filename}')
+        logger.log(f'{lower_filename}')
         logger.indent()
         for change in per_file_changes:
             line = f'{type(change).__name__} {change.filename}'
             if type(change) == git.Move:
                 line += f' -> {change.target_filename}'
-            logger.print(LogLevel.NORMAL, line)
+            logger.log(line)
 
         for i in range(0, len(per_file_changes) - 1):
             change = per_file_changes[i]
@@ -51,7 +51,7 @@ def create_jobs(changes, plastic_repo, source_root_path, pretend, logger):
             if type(change) != git.Delete or type(next_change) != git.Add:
                 continue
 
-            logger.print(LogLevel.NORMAL, 'Replacing Del + Add with Move')
+            logger.log('Replacing Del + Add with Move')
             per_file_changes[i] = git.Move(change.filename,
                                            next_change.filename)
             per_file_changes[i + 1] = None
@@ -192,7 +192,7 @@ class Job:
         dirs_to_create = find_dirs_to_create(
             self.plastic_repo.workspace_root, filenames)
         for directory in dirs_to_create:
-            self.logger.print(LogLevel.NORMAL, directory)
+            self.logger.log(directory)
             if self.pretend:
                 continue
 
@@ -218,7 +218,7 @@ class Job:
                 break
 
             for directory in empty_parents:
-                self.logger.print(LogLevel.NORMAL, directory)
+                self.logger.log(directory)
 
             remove_count += len(empty_parents)
             self.plastic_repo.remove_multiple(empty_parents, self.logger)
@@ -323,16 +323,15 @@ class MoveJob(Job):
                     parent_dir_case_change_pairs.append(from_to_pair)
                     unique_parent_dir_case_change_pairs.add(from_to_pair)
 
-        self.logger.print(LogLevel.NORMAL,
-                          f'Found {len(parent_dir_case_change_pairs)}'
-                          f' case changes')
+        self.logger.log(f'Found {len(parent_dir_case_change_pairs)}'
+                        f' case changes')
         listener.end_step()
 
         if parent_dir_case_change_pairs:
             listener.start_step(f'Rename parent dirs with case changes')
             for from_path, to_path in parent_dir_case_change_pairs:
-                self.logger.print(LogLevel.NORMAL, f'from: {from_path}')
-                self.logger.print(LogLevel.NORMAL, f'to: {to_path}')
+                self.logger.log(f'from: {from_path}')
+                self.logger.log(f'to: {to_path}')
             self.plastic_repo.move_multiple(parent_dir_case_change_pairs,
                                             self.logger)
             listener.end_step()

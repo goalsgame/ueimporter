@@ -63,6 +63,9 @@ class Logger:
         self._logfile = open(log_filename, 'w') if log_filename else None
         self._log_level = log_level
 
+    def log(self, line):
+        self.print(LogLevel.NORMAL, line)
+
     def log_error(self, line):
         self.print(LogLevel.ERROR, line)
 

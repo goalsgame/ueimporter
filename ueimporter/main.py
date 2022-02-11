@@ -100,9 +100,9 @@ def create_parser():
 
 def read_change_jobs(config, logger):
     try:
-        logger.print(LogLevel.NORMAL, f'Reading changes between'
-                     f' {config.from_release_tag}'
-                     f' and {config.to_release_tag} from git')
+        logger.log(f'Reading changes between'
+                   f' {config.from_release_tag}'
+                   f' and {config.to_release_tag} from git')
         changes = git.read_changes(config.git_repo,
                                    config.from_release_tag,
                                    config.to_release_tag,
@@ -269,8 +269,8 @@ class Continue(enum.Enum):
 
 def prompt_user_wants_to_continue(logger):
     while True:
-        logger.print(LogLevel.NORMAL, '')
-        logger.print(LogLevel.NORMAL, SEPARATOR)
+        logger.log('')
+        logger.log(SEPARATOR)
         user_input = input(
             'Do you want to continue? [yes|skip|skip-alll|no]: ').lower()
         if user_input in ['yes', 'y']:
@@ -282,8 +282,8 @@ def prompt_user_wants_to_continue(logger):
         elif user_input in ['no', 'n']:
             return Continue.NO
         else:
-            logger.print(LogLevel.NORMAL,
-                         f'"{user_input}" is not a valid choice')
+            logger.log(
+                f'"{user_input}" is not a valid choice')
 
 
 def get_elapsed_time(start_timestamp):
@@ -345,30 +345,29 @@ class ProgressListener(ueimporter.job.JobProgressListener):
         batch_start = self._processed_op_count
         batch_end = batch_start + batch_size
         self._processed_op_count += batch_size
-        self._logger.print(LogLevel.NORMAL, SEPARATOR)
-        self._logger.print(LogLevel.NORMAL,
-                           f'Processing '
-                           f'[{batch_start},{batch_end})'
-                           f' / {self._total_op_count}'
-                           f' - Elapsed {total_elapsed_time}'
-                           f' - Remaining {remaining_time}')
+        self._logger.log(SEPARATOR)
+        self._logger.log(f'Processing '
+                         f'[{batch_start},{batch_end})'
+                         f' / {self._total_op_count}'
+                         f' - Elapsed {total_elapsed_time}'
+                         f' - Remaining {remaining_time}')
         self._logger.indent()
         for op in ops:
             op_desc = str(op)
             for line in op_desc.split('\n'):
-                self._logger.print(LogLevel.NORMAL, line)
-        self._logger.print(LogLevel.NORMAL, '')
+                self._logger.log(line)
+        self._logger.log('')
 
     def end_batch(self):
         assert self._active_time_estimate
         batch_elapsed_time = self._active_time_estimate.end_batch()
         self._active_time_estimate = None
         self._logger.deindent()
-        self._logger.print(LogLevel.NORMAL, '')
-        self._logger.print(LogLevel.NORMAL, f'Batch time {batch_elapsed_time}')
+        self._logger.log('')
+        self._logger.log(f'Batch time {batch_elapsed_time}')
 
     def start_step(self, desc):
-        self._logger.print(LogLevel.NORMAL, f'* {desc}')
+        self._logger.log(f'* {desc}')
         self._logger.indent()
 
     def end_step(self):
@@ -393,9 +392,9 @@ def main():
 
     start_timestamp = time.time()
     jobs = read_change_jobs(config, logger)
-    logger.print(LogLevel.NORMAL, f'Processing {len(jobs)} jobs')
+    logger.log(f'Processing {len(jobs)} jobs')
 
-    logger.print(LogLevel.NORMAL, f'Validating ops')
+    logger.log(f'Validating ops')
     skip_all_invalid_ops = args.skip_invalid_ops
     invalid_ops = []
     invalid_op_count = 0
@@ -406,7 +405,7 @@ def main():
 
     if invalid_ops:
         logger.indent()
-        logger.print(LogLevel.NORMAL, f'Found {invalid_op_count} invalid ops')
+        logger.log(f'Found {invalid_op_count} invalid ops')
         for job, ops in invalid_ops:
             for (op, err) in ops:
                 logger.log_error(f'{op}')
@@ -445,16 +444,16 @@ def main():
     for job in jobs:
         job.process(BATCH_SIZE, -1, progress_listener)
 
-    logger.print(LogLevel.NORMAL, SEPARATOR)
-    logger.print(LogLevel.NORMAL, f'Updating {config.ueimporter_json_filename}'
-                 f' with release tag {config.to_release_tag}')
+    logger.log(SEPARATOR)
+    logger.log(f'Updating {config.ueimporter_json_filename}'
+               f' with release tag {config.to_release_tag}')
 
     update_ueimporter_json(config, logger)
-    logger.print(LogLevel.NORMAL, '')
+    logger.log('')
 
-    logger.print(LogLevel.NORMAL, SEPARATOR)
+    logger.log(SEPARATOR)
     total_elapsed_time = get_elapsed_time(start_timestamp)
-    logger.print(LogLevel.NORMAL, f'Total elapsed time {total_elapsed_time}')
+    logger.log(f'Total elapsed time {total_elapsed_time}')
 
     return 0
 
