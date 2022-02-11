@@ -431,6 +431,32 @@ def main():
 
         logger.deindent()
 
+    job_op_counts = {}
+    for job in jobs:
+        op_count = job_op_counts.get(job.__class__, 0)
+        job_op_counts[job.__class__] = op_count + len(job.ops)
+
+    def print_stats():
+        logger.indent()
+        total_op_count = 0
+        max_line_length = 0
+        for job_class in ueimporter.job.JOB_CLASSES:
+            op_count = job_op_counts.get(job_class, 0)
+            total_op_count += op_count
+            line = f'{job_class.job_desc}: {op_count} ops'
+            max_line_length = max(len(line), max_line_length)
+            logger.log(line)
+        line = f'(Skip: {invalid_op_count} invalid ops)'
+        logger.log(line)
+        max_line_length = max(len(line), max_line_length)
+        logger.log('=' * max_line_length)
+        logger.log(f'{total_op_count} ops in total')
+        logger.deindent()
+
+    logger.log(SEPARATOR)
+    logger.log('Job summary')
+    print_stats()
+
     if MAX_OPS_PER_JOB >= 0:
         for job in jobs:
             job.trim_trailing_ops(MAX_OPS_PER_JOB)
@@ -457,6 +483,8 @@ def main():
     logger.log('')
 
     logger.log(SEPARATOR)
+    logger.log('Summary')
+    print_stats()
     total_elapsed_time = get_elapsed_time(start_timestamp)
     logger.log(f'Total elapsed time {total_elapsed_time}')
 
