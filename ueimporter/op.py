@@ -1,3 +1,5 @@
+import re
+
 import ueimporter.path_util as path_util
 
 
@@ -35,8 +37,18 @@ class OpValidation:
 
 
 class Operation:
+    _OP_DESC = ''
+
+    @classmethod
+    @property
+    def op_desc(cls):
+        return cls._OP_DESC
+
     def __init__(self, change):
         self._change = change
+
+    def __str__(self):
+        return f'{self.__class__.op_desc} {self.filename}'
 
     @property
     def filename(self):
@@ -50,9 +62,6 @@ class AddOp(Operation):
     def __init__(self, change):
         Operation.__init__(self, change)
 
-    def __str__(self):
-        return f'Add {self.filename}'
-
     def validate(self, source_root, target_root):
         if not source_root.joinpath(self.filename).is_file():
             return OpValidation.invalid_not_exist(self.filename, source_root)
@@ -65,9 +74,6 @@ class DeleteOp(Operation):
     def __init__(self, change):
         Operation.__init__(self, change)
 
-    def __str__(self):
-        return f'Delete {self.filename}'
-
     def validate(self, source_root, target_root):
         if source_root.joinpath(self.filename).is_file():
             return OpValidation.invalid_exist(self.filename, source_root)
@@ -79,9 +85,6 @@ class DeleteOp(Operation):
 class ModifyOp(Operation):
     def __init__(self, change):
         Operation.__init__(self, change)
-
-    def __str__(self):
-        return f'Modify {self.filename}'
 
     def validate(self, source_root, target_root):
         if not source_root.joinpath(self.filename).is_file():
@@ -129,3 +132,12 @@ class MoveOp(Operation):
         if target_root.joinpath(self.target_filename).is_file():
             return OpValidation.invalid_exist(self.target_filename, source_root)
         return OpValidation.valid()
+
+
+# Register operations, and set up descriptions
+_OP_DESC_REGEX = re.compile('^([a-zA-Z]*)Op$')
+_OPERATIONS = [AddOp, DeleteOp, ModifyOp, MoveOp]
+for op_class in _OPERATIONS:
+    match = _OP_DESC_REGEX.match(op_class.__name__)
+    assert match
+    op_class._OP_DESC = match.group(1)

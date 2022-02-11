@@ -1,4 +1,5 @@
 import os
+import re
 import shutil
 
 import ueimporter.git as git
@@ -113,8 +114,14 @@ class JobProgressListener:
 
 
 class Job:
-    def __init__(self, desc, op_class, plastic_repo, source_root_path, pretend, logger):
-        self._desc = desc
+    _JOB_DESC = ''
+
+    @classmethod
+    @property
+    def job_desc(cls):
+        return cls._JOB_DESC
+
+    def __init__(self, op_class, plastic_repo, source_root_path, pretend, logger):
         self._op_class = op_class
         self.plastic_repo = plastic_repo
         self.source_root_path = source_root_path
@@ -125,7 +132,7 @@ class Job:
 
     @property
     def desc(self):
-        return self._desc
+        return self.__class__.job_desc
 
     @property
     def ops(self):
@@ -229,7 +236,7 @@ class Job:
 
 class AddJob(Job):
     def __init__(self, **kwargs):
-        Job.__init__(self, 'Add', op.AddOp, **kwargs)
+        Job.__init__(self, op.AddOp, **kwargs)
 
     def process_ops(self, ops, listener):
         filenames = [op.filename for op in ops]
@@ -251,7 +258,7 @@ class AddJob(Job):
 
 class ModifyJob(Job):
     def __init__(self, **kwargs):
-        Job.__init__(self, 'Modify', op.ModifyOp, **kwargs)
+        Job.__init__(self, op.ModifyOp, **kwargs)
 
     def process_ops(self, ops, listener):
         filenames = [op.filename for op in ops]
@@ -267,7 +274,7 @@ class ModifyJob(Job):
 
 class DeleteJob(Job):
     def __init__(self, **kwargs):
-        Job.__init__(self, 'Delete', op.DeleteOp, **kwargs)
+        Job.__init__(self, op.DeleteOp, **kwargs)
 
     def process_ops(self, ops, listener):
         filenames = [op.filename for op in ops]
@@ -282,7 +289,7 @@ class DeleteJob(Job):
 
 class MoveJob(Job):
     def __init__(self, **kwargs):
-        Job.__init__(self, 'Move', op.MoveOp, **kwargs)
+        Job.__init__(self, op.MoveOp, **kwargs)
 
     def process_ops(self, ops, listener):
         target_filenames = [op.target_filename for op in ops]
@@ -355,3 +362,11 @@ class MoveJob(Job):
         source_filenames = [op.filename for op in ops]
         self.remove_empty_parent_dirs(source_filenames)
         listener.end_step()
+
+# Register operations, and set up descriptions
+_JOB_DESC_REGEX = re.compile('^([a-zA-Z]*)Job$')
+JOB_CLASSES = [AddJob, DeleteJob, ModifyJob, MoveJob]
+for job_class in JOB_CLASSES:
+    match = _JOB_DESC_REGEX.match(job_class.__name__)
+    assert match
+    job_class._JOB_DESC = match.group(1)
