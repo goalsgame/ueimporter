@@ -1,8 +1,6 @@
 import os
 import shutil
 
-from ueimporter import LogLevel
-
 import ueimporter.git as git
 import ueimporter.op as op
 import ueimporter.path_util as path_util
@@ -177,7 +175,7 @@ class Job:
     def copy(self, filenames):
         # Copy files from source to target plastic workspace
         for filename in filenames:
-            self.logger.print(LogLevel.VERBOSE, filename)
+            self.logger.log_verbose(filename)
             if self.pretend:
                 continue
 

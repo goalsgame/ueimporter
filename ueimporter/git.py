@@ -4,7 +4,6 @@ import ueimporter
 import unicodedata
 
 from pathlib import PurePosixPath
-from ueimporter import LogLevel
 
 
 class ParseError(Exception):
@@ -106,22 +105,22 @@ class Repo:
     def run_cmd_cached(self, arguments, logger):
         cache_command = ['git'] + arguments
         if self.command_cache and self.command_cache.has_entry(cache_command):
-            logger.print(LogLevel.VERBOSE, ' '.join(
+            logger.log_verbose(' '.join(
                 [str(s) for s in cache_command]))
-            logger.print(LogLevel.VERBOSE, 'Reading stdout from command cache')
+            logger.log_verbose('Reading stdout from command cache')
             return self.command_cache.read_entry(cache_command)
 
         stdout = self.run_cmd(arguments, logger)
 
         if self.command_cache:
-            logger.print(LogLevel.VERBOSE, 'Writing stdout to command cache')
+            logger.log_verbose('Writing stdout to command cache')
             self.command_cache.write_entry(cache_command, stdout)
 
         return stdout
 
     def run_cmd(self, arguments, logger):
         command = ['git'] + arguments
-        logger.print(LogLevel.VERBOSE, ' '.join([str(s) for s in command]))
+        logger.log_verbose(' '.join([str(s) for s in command]))
         return ueimporter.run(command, logger, cwd=self.repo_root)
 
 
