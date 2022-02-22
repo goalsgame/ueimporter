@@ -22,6 +22,11 @@ def create_parser():
     parser = argparse.ArgumentParser(
         description='Imports Unreal Engine releases into plastic vendor branches'
     )
+    parser.add_argument('--pretend',
+                        action='store_true',
+                        help="""
+                        If set, ueimporter will log what is about to happen
+                        without actually doing anything""")
     parser.add_argument('--git-repo-root',
                         required=True,
                         type=lambda p: Path(p).absolute(),
@@ -31,14 +36,14 @@ def create_parser():
                         Create this directory with
                         "$ git clone git@github.com:EpicGames/UnrealEngine.git"
                         """)
+    parser.add_argument('--to-release-tag',
+                        required=True,
+                        help='Git tag of release to upgrade to')
     parser.add_argument('--from-release-tag',
                         help="""
                         Git tag of release currently used.
                         Required whenever a ueimporter.json file does not exist.
                         """)
-    parser.add_argument('--to-release-tag',
-                        required=True,
-                        help='Git tag of release to upgrade to')
     parser.add_argument('--zip-package-root',
                         required=True,
                         type=lambda p: Path(p).absolute(),
@@ -51,7 +56,7 @@ def create_parser():
                         default=Path.cwd(),
                         help="""
                         Specifies the root of the UE plastic workspace on disc.
-                        Default is CWD.
+                        Default is current working directory (CWD)
                         """)
     parser.add_argument('--ueimporter-json',
                         type=lambda p: Path(p).absolute(),
@@ -59,14 +64,14 @@ def create_parser():
                         help="""
                         Name of file where last integrated UE version will be
                         stored.
-                        Default is ueimporter.json.
+                        Default is .ueimporter.json
                         """)
     parser.add_argument('--log-file',
                         type=lambda p: Path(p).absolute(),
                         default=Path('.ueimporter/ueimporter.log'),
                         help="""
                         Name of log file where all output is saved.
-                        Default is .ueimporter.log.
+                        Default is .ueimporter/ueimporter.log
                         """)
     parser.add_argument('--log-level',
                         type=LogLevel.from_string,
@@ -75,25 +80,22 @@ def create_parser():
                         help="""
                         Controls the detail level of logs that show up
                         in STDOUT. All levels always ends up in the logfile.
-                        Default is 'normal'
+                        Default is normal
                         """)
-    parser.add_argument('--pretend',
-                        action='store_true',
-                        help="""
-                        Set to print what is about to happen without
-                        doing anything""")
     parser.add_argument('--skip-invalid-ops',
                         action='store_true',
                         help="""
-                        Skip operations that will fail when executed.
+                        Skip operations that will fail when executed, for
+                        instance a modified file that does not exist in
+                        the zip package from which it will be copied.
                         Equivalent to answering "skip-all" in the interactive
-                        prompt.
+                        prompt
                         """)
     parser.add_argument('--git-command-cache',
                         type=lambda p: Path(p).absolute(),
                         help="""
                         If set, results of heavy git commands will be stored
-                        in this directory.
+                        in this directory
                         """)
     return parser
 

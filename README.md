@@ -8,6 +8,8 @@ Script used to import Unreal Engine releases into Game plastic repository.
     2. [Uninstallation](#install-uninstall)
 
 2. [Usage](#usage)
+    1. [Required Arguments](#usage-args-required)
+    1. [Optional Arguments](#usage-args-optional)
 
 3. [Development](#dev)
     1. [Testing](#dev-test)
@@ -60,6 +62,60 @@ ueimporter^
 The `--pretend` argument makes the script simply log the files it will upgrade,
 without actually doing it. Remove this parameter once you feel confident
 that it's what you want.
+
+### Required Arguments <a name="usage-args-required" />
+
+#### --git-repo-root
+Specifies the root of the UE git repo on disc. Create this directory with
+```
+$ git clone git@github.com:EpicGames/UnrealEngine.git
+```
+
+#### --to-release-tag
+Git tag of release to upgrade to.
+Tags is listed here [EpicGames/UnrealEngine/tags](https://github.com/EpicGames/UnrealEngine/tags)
+
+#### --zip-package-root
+Specifies where release zip files have been extracted.
+Zip files can be downloaded from [EpicGames/UnrealEngine/releases](https://github.com/EpicGames/UnrealEngine/releases)
+
+### Optional Arguments <a name="usage-args-optional" />
+
+#### --pretend
+Set to print what is about to happen without doing anything.
+
+#### --plastic-workspace-root
+Specifies the root of the UE plastic workspace on disc.
+Default is current working directory (CWD).
+
+#### --from-release-tag
+Git tag of release currently used.
+Required whenever a `ueimporter.json` file does not exist.
+
+#### --ueimporter-json
+Name of file where last integrated UE version will be stored.
+Default is `.ueimporter.json`.
+
+#### --log-file
+Name of log file where all output is saved.
+Default is `.ueimporter/ueimporter.log`.
+
+#### --log-level
+Controls the detail level of logs that show up in `STDOUT`.
+All levels always ends up in the logfile.
+
+Available log levels
+* error
+* warning
+* normal (default)
+* verbose
+* debug
+
+#### --skip-invalid-ops
+Skip operations that will fail when executed. Equivalent to choosing `skip-all` in the interactive prompt.
+
+#### --git-command-cache
+If set, results of heavy git commands will be stored in this directory.
 
 ## Development <a name="dev" />
 
