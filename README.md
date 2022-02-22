@@ -4,6 +4,8 @@ Script used to import Unreal Engine releases into Game plastic repository.
 
 ## Table of Contents
 1. [Installation](#install)
+    1. [Development mode](#install-dev-mode)
+    2. [Uninstallation](#install-uninstall)
 
 2. [Usage](#usage)
 
@@ -13,14 +15,33 @@ Script used to import Unreal Engine releases into Game plastic repository.
 
 ## Installation <a name="install" />
 
-To install a snapshot of `ueimporter` in your users pip registry you do (from repo root):
+Install a snapshot of `ueimporter` using `pip`, from the git repo root
 ```
 $ pip install --user .
 ```
-This enables you to invoke `ueimporter` from any directory.
+This enables you to invoke `ueimporter` from any directory (such as the target
+plastic repo root)
 
 Each time you want to upgrade `ueimporter` you simply pull down the latest code
 and run the command again.
+
+### Uninstall <a name="install-uninstall" />
+To uninstall you simply call pip, can be invoked from anywhere:
+```
+$ pip uninstall ueimporter
+```
+
+### Development mode <a name="install-dev-mode" />
+
+If you plan do do active development of `ueimporter` it's more convenient to
+install in editable/development mode. This way `pip` installs thin
+wrappers in it's registry that simply forwards all invocations to the code
+in your git repository.
+
+Again, from your git repo root
+```
+$ pip install --user -e .
+```
 
 ## Usage <a name="usage" />
 
@@ -42,15 +63,7 @@ that it's what you want.
 
 ## Development <a name="dev" />
 
-If you plan do do active development of `ueimporter` it's more convenient to
-install in editable/development mode. This way `pip` installs thin
-wrappers in it's registry that simply forwards all invocations to the code
-in your git repository.
-
-From your git repo root:
-```
-$ pip install --user -e .
-```
+Make sure to install `ueimporter` in dev mode, as described [above](#install-dev-mode).
 
 ### Testing <a name="dev-test" />
 
