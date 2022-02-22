@@ -71,7 +71,7 @@ def create_parser():
     parser.add_argument('--log-level',
                         type=LogLevel.from_string,
                         default=LogLevel.NORMAL,
-                        choices=list(LogLevel),
+                        choices=[str(l).lower() for l in list(LogLevel)],
                         help="""
                         Controls the detail level of logs that show up
                         in STDOUT. All levels always ends up in the logfile.

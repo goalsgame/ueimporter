@@ -49,7 +49,7 @@ class LogLevel(OrderedEnum):
     @classmethod
     def from_string(cls, s):
         try:
-            return cls[s]
+            return cls[s.upper()]
         except KeyError:
             raise ValueError()
 
