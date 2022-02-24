@@ -20,7 +20,8 @@ by replicating changes from the official
     1. [Optional Arguments](#usage-args-optional)
 
 5. [Development](#dev)
-    1. [Testing](#dev-test)
+    1. [Debugging](#dev-debug)
+    2. [Testing](#dev-test)
 
 
 ## Overview
@@ -195,6 +196,17 @@ If set, results of heavy git commands will be stored in this directory.
 
 Make sure to install `ueimporter` in dev mode, as described [above](#install-dev-mode).
 
+### Debugging <a name="dev-debug" />
+To debug you can use pythons build in `pdb` module
+
+```
+$ cd ueimporter
+$ python -m pdb ueimporter\main.py $(YOUR_OPTIONS)
+```
+
+Describing how to use `pdb` is out of scope, for starters try the `help` command.
+For more info see the module documentation: [pdb — The Python Debugger](https://docs.python.org/3/library/pdb.html)
+
 ### Testing <a name="dev-test" />
 
 `ueimporter` use [pytest](https://docs.pytest.org) to run unit tests, it's
@@ -205,7 +217,9 @@ It's simple to use, again from the repo root:
 # Run all tests
 $ pytest
 
-# Run a specific test-file (tests/test_main.py)
-$ pytest -q test_main.py
+# Run a specific test-file (tests/test_path_util.py)
+$ pytest -q test_path_util.py
 
 ```
+
+Note that test coverage is not that high at the time of writing.
