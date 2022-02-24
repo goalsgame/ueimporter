@@ -107,21 +107,35 @@ $ pip install --user -e .
 
 ## Usage <a name="usage" />
 
-Here's an example that upgrade from `4.27.1` to `4.27.2`.
+TODO:
+* Desc how to sync UE github repo
+* Desc branch setup in plastic
 
+Step by step guide:
+1. Checkout the vendor branch
+2. Make sure the workspace is completely clean (no private/ignored files)
+3. Download release zip
+4. Run script with --pretend
+
+Here's an example that upgrade a UE vendor branch to `4.27.2`.
 ```
-ueimporter^
- --git-repo-root="H:\UnrealEngine"^
- --from-release-tag="4.27.1-release"^
- --to-release-tag="4.27.2-release"^
- --zip-package-root="H:\Vendor\UnrealEngine"^
+ueimporter
+ --git-repo-root="H:\UnrealEngine"
+ --to-release-tag="4.27.2-release"
+ --zip-package-root="H:\Vendor\UnrealEngine"
  --plastic-workspace-root="H:\Goals\Game"
- --plastic
+ --pretend
 ```
-
 The `--pretend` argument makes the script simply log the files it will upgrade,
 without actually doing it. Remove this parameter once you feel confident
-that it's what you want.
+that 'ueimporter' will do what you expect.
+
+5. Run script for real
+
+6. Verify that directory structure is identical to the release zip
+7. Check in all changes into plastic
+8. Rejoice
+
 
 ### Required Arguments <a name="usage-args-required" />
 
