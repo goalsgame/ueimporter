@@ -1,19 +1,67 @@
 # ueimporter
 
-Script used to import Unreal Engine releases into Game plastic repository.
+`ueimporter` is a command line tool that imports
+[Unreal Engine](https://www.unrealengine.com) source code releases
+into a [plastic scm](https://www.plasticscm.com) repo,
+by replicating changes from the official
+[UnrealEngine git repo](https://github.com/EpicGames/UnrealEngine).
 
 ## Table of Contents
-1. [Installation](#install)
-    1. [Development mode](#install-dev-mode)
-    2. [Uninstallation](#install-uninstall)
+1. [Overview](#overview)
 
-2. [Usage](#usage)
+2. [Installation](#install)
+    1. [Uninstall](#install-uninstall)
+    2. [Development mode](#install-dev-mode)
+
+3. [Usage](#usage)
     1. [Required Arguments](#usage-args-required)
     1. [Optional Arguments](#usage-args-optional)
 
-3. [Development](#dev)
+4. [Development](#dev)
     1. [Testing](#dev-test)
 
+
+## Overview
+
+`ueimporter` is useful for plastic version control users, that wants to
+build a game using Unreal Engine, and plan to make changes to the engine code
+itself, while also upgrading engine releases as they are released by Epic.
+
+The idea is to see Unreal Engine as a third party vendor lib (albeit a really
+big library). An established strategy for vendor libs is to keep a clean and
+unmodified copy of the lib in a separate branch, that you merge into the
+branch where you do your active development.
+`ueimporter` helps create such a vendor branch, and keep it updated with
+the vanilla engine for new releases.
+
+A naive strategy would be to delete all files on the vendor branch simply
+copy all files from the new release, and let plastic detect which files have
+been added, removed, modified or moved.
+
+It sounds like it should work, but the move detection in plastic seem to miss
+most moves, at least when there are as many files involved as there are in an
+unreal engine upgrade (4.27.2 -> 5.0.0-early-access-1 modifies over 50k files).
+For a moved file you will end up with a delete followed by an add. If you have
+made changes to the file in the old location on your main-branch you will miss
+these when you merge down the new UE release from the vendor branch.
+If plastic would know that a file was in fact moved it would be able to merge
+your changes into the new location.
+
+This move file problem is the main reason `ueimporter` exist, and to solve it
+it uses information from the git repo that knows how and where a file was moved.
+It simply asks git `git diff --name-status <from-release-tag> <to-release-tag>`
+and we get a list of exactly which files was added, removed, modified or moved.
+Once it knows it's just a question of replicating these exact changes
+in plastic.
+
+`ueimporter` is meant to be platform independent and could be used on
+Windows, macOs or Linux. These platforms disagree on how line endings is encoded
+in text files. The tool avoids the problem completely by not copying files
+directly from the git repo, rather it expects you to download the zip files
+that Epic publish for each engine release, and copies files from there.
+Release zips use LF line endings.
+
+TODO: Show a suggested branch layout from Branch Exporer
 
 ## Installation <a name="install" />
 
