@@ -271,6 +271,7 @@ def prompt_user_invalid_op_response(logger):
         user_input_map = {
             'yes': InvalidOpResponse.SKIP,
             'y': InvalidOpResponse.SKIP,
+
             'all': InvalidOpResponse.SKIP_ALL,
             'a': InvalidOpResponse.SKIP_ALL,
 
