@@ -9,15 +9,17 @@ by replicating changes from the official
 ## Table of Contents
 1. [Overview](#overview)
 
-2. [Installation](#install)
+2. [Prequestives](#prequestives)
+
+3. [Installation](#install)
     1. [Uninstall](#install-uninstall)
     2. [Development mode](#install-dev-mode)
 
-3. [Usage](#usage)
+4. [Usage](#usage)
     1. [Required Arguments](#usage-args-required)
     1. [Optional Arguments](#usage-args-optional)
 
-4. [Development](#dev)
+5. [Development](#dev)
     1. [Testing](#dev-test)
 
 
@@ -62,6 +64,16 @@ that Epic publish for each engine release, and copies files from there.
 Release zips use LF line endings.
 
 TODO: Show a suggested branch layout from Branch Exporer
+
+## Prequestives <a name="prequestives" />
+* Python 3.10+
+* Git
+* [Plastic scm](https://www.plasticscm.com)
+Plastics CLI tool `cm` needs to be present in `PATH`
+* A cloned of the [UnrealEngine git repo](https://github.com/EpicGames/UnrealEngine)
+Your github user will need to be a registered unreal developer to get access.
+* A release zip for the UE release you want to import.
+As listed here [UnrealEngine/releases](https://github.com/EpicGames/UnrealEngine/releases)
 
 ## Installation <a name="install" />
 
