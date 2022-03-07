@@ -154,35 +154,74 @@ $ pip install --user -e .
 
 ## Usage <a name="usage" />
 
-TODO:
-* Desc how to sync UE github repo
-* Desc branch setup in plastic
+### Step by step guide
 
-Step by step guide:
-1. Checkout the vendor branch
-2. Make sure the workspace is completely clean (no private/ignored files)
-3. Download release zip
-4. Run script with --pretend
+#### 1. Switch to the lastest changeset on plastics vendor branch
+
+#### 2. Fetch latest from Epics main git repo
+
+For this example we assume that you have previously cloned [UnrealEngine](https://github.com/EpicGames/UnrealEngine) into
+`c:\github.com\UnrealEngine`
+```
+$ cd c:\github.com\UnrealEngine
+$ git fetch
+```
+
+#### 3. Make sure the workspace is completely clean
+
+There can be no private/ignored files present in the directory tree, they might interfere
+with the upgrade process.
+
+#### 4. Download & extract release zip/tarball
+
+From [UnrealEngine/releases](https://github.com/EpicGames/UnrealEngine/releases)
+In this example we unpack all releases in a directory called `C:\Vendor\UnrealEngine`,
+it is assumed to hold a subdirectory for each release named exactly like the git release tag.
+
+#### 5. Run script with --pretend
 
 Here's an example that upgrade a UE vendor branch to `4.27.2`.
 ```
 ueimporter
- --git-repo-root="H:\UnrealEngine"
+ --git-repo-root="C:\github.com\UnrealEngine"
  --to-release-tag="4.27.2-release"
- --zip-package-root="H:\Vendor\UnrealEngine"
- --plastic-workspace-root="H:\Goals\Game"
+ --zip-package-root="C:\Vendor\UnrealEngine"
+ --plastic-workspace-root="C:\Plastic\YourGame"
  --pretend
 ```
 The `--pretend` argument makes the script simply log the files it will upgrade,
 without actually doing it. Remove this parameter once you feel confident
 that 'ueimporter' will do what you expect.
 
-5. Run script for real
+#### 6. Stop pretending, and run `ueimporter` for real
+```
+ueimporter
+ --git-repo-root="C:\github.com\UnrealEngine"
+ --to-release-tag="4.27.2-release"
+ --zip-package-root="C:\Vendor\UnrealEngine"
+ --plastic-workspace-root="C:\Plastic\YourGame"
+```
 
-6. Verify that directory structure is identical to the release zip
-7. Check in all changes into plastic
-8. Rejoice
+This might take a while, hours even on a fast machine. The slow part is communicating with
+plastics CLI tool `cm` to add/delete/check out or move files and directories.
+For me it took over 7 hours to import the 100k changes that differentiates `5.0.0-preview-1` from `5.0.0-early-access-2`
 
+
+#### 7. Verify that directory structure is identical to the release zip
+To make sure that `ueimporter` has not missed anything it can be a good idea to
+compare the plastic workspace directory is now identical to the release zip
+file.
+
+There are several tools for this, [Beyond Compare](https://www.scootersoftware.com) is a one, [WinMerge](https://winmerge.org/) another free alternative.
+
+#### 8. Check in all changes into plastic
+There is no need to compile and test anything, remember that the vendor branch simply contains
+unmodified versions of UnrealEngine. Any building and testing happens later, when you merge
+the new release with your `main` branch.
+
+#### 9. Rejoice
+Now you have a smoking fresh engine release. Next step is to merge it into your development branch (`main`). That
+is out of scope for this guide.
 
 ### Required Arguments <a name="usage-args-required" />
 
