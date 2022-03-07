@@ -9,17 +9,19 @@ by replicating changes from the official
 ## Table of Contents
 1. [Overview](#overview)
 
-2. [Prequestives](#prequestives)
+2. [Suggested branch layout](#branch-layout)
 
-3. [Installation](#install)
+3. [Prequestives](#prequestives)
+
+4. [Installation](#install)
     1. [Uninstall](#install-uninstall)
     2. [Development mode](#install-dev-mode)
 
-4. [Usage](#usage)
+5. [Usage](#usage)
     1. [Required Arguments](#usage-args-required)
     1. [Optional Arguments](#usage-args-optional)
 
-5. [Development](#dev)
+6. [Development](#dev)
     1. [Debugging](#dev-debug)
     2. [Testing](#dev-test)
 
@@ -72,7 +74,43 @@ This means that `ueimporter` **needs to be executed on Linux or macOs** so that
 plastic has a chance to read file permission flags from the file system when files
 are checked in.
 
-TODO: Show a suggested branch layout from Branch Exporer
+# Suggested branch layout <a name="branch-layout" />
+
+![Branch Layout ](/ueimporter/images/ueimporter-branch-layout-4.27.0-4.27.2.png)
+
+Here we see a suggested branch layout. The game itself is developed on `main`
+, on `vendor-unreal-engine` we keep unmodified Unreal Engine releases and finally
+there is a couple of task branches called `upgrade-ue-4.27.1` and `upgrade-ue-4.27.2`
+used as a staging area for updating `main` with corresponding engine releases.
+
+In this example, the first changesets contains change unrelated to Unreal Engine, in fact after
+the second changeset there is not a single file from the engine present.
+
+From this "empty" state we create the `vendor-unreal-engine` branch, and the first commit to it is
+a simple copy paste of the all files found in [4.27.0-release.tar.gz](https://github.com/EpicGames/UnrealEngine/releases/tag/4.27.0-release).
+Make sure to add and check in files on either macOs or Linux so that any file permission flags
+(+x) gets included.
+
+Now we are ready to merge this change down to `main`, and we can start developing our game. We can
+even make changes to `Engine` if we need to, such as local change #1.
+
+When we are ready to upgrade to `4.27.1` we switch back to `vendor-unreal-engine`, download
+[4.27.1-release.tar.gz](https://github.com/EpicGames/UnrealEngine/releases/tag/4.27.1-release), clone/fetch
+the main [UnrealEngine git repo](https://github.com/EpicGames/UnrealEngine) and use
+`ueimporter` to replicate all changes to your plastic workspace. Review the result
+in plastics UI and check in the result. See [Usage](#usage) for a more detailed description.
+
+Now, we create a branch called `upgrade-ue-4.27.1`, and we merge with the `4.27.1` release
+we just imported. Solving any conflicts that `local change #1` might have triggered.
+When we test out our game we notice that we need to do `local change #2` to make it work.
+
+The result is merged back to `main` and we can continue developing our game.
+Once again, we can make changes to engine code, such as `local change #3`
+
+Whenever it's time to upgrade we rince and repeat the same process;
+First we import changes using `ueimporter`, then merge with main on a task branch
+before we publish it to `main`.
+
 
 ## Prequestives <a name="prequestives" />
 * Python 3.10+
