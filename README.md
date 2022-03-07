@@ -71,7 +71,7 @@ TODO: Show a suggested branch layout from Branch Exporer
 * Git
 * [Plastic scm](https://www.plasticscm.com)
 Plastics CLI tool `cm` needs to be present in `PATH`
-* A cloned of the [UnrealEngine git repo](https://github.com/EpicGames/UnrealEngine)
+* A clone of the [UnrealEngine git repo](https://github.com/EpicGames/UnrealEngine).
 Your github user will need to be a registered unreal developer to get access.
 * A release zip for the UE release you want to import.
 As listed here [UnrealEngine/releases](https://github.com/EpicGames/UnrealEngine/releases)
