@@ -92,7 +92,7 @@ Make sure to add and check in files on either macOs or Linux so that any file pe
 (+x) gets included.
 
 Now we are ready to merge this change down to `main`, and we can start developing our game. We can
-even make changes to `Engine` if we need to, such as local change #1.
+even make changes to `Engine` if we need to, such as `local change #1`.
 
 When we are ready to upgrade to `4.27.1` we switch back to `vendor-unreal-engine`, download
 [4.27.1-release.tar.gz](https://github.com/EpicGames/UnrealEngine/releases/tag/4.27.1-release), clone/fetch
