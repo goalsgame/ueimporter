@@ -101,12 +101,21 @@ def create_parser():
 
 def read_change_jobs(config, logger):
     try:
+        logger.log('Resolving git hashes of release tags')
+        logger.indent()
+        from_git_hash = config.git_repo.rev_parse(
+            config.from_release_tag, logger)
+        to_git_hash = config.git_repo.rev_parse(config.to_release_tag, logger)
+        logger.log(f'{config.from_release_tag} <=> {from_git_hash}')
+        logger.log(f'{config.to_release_tag} <=> {to_git_hash}')
+        logger.deindent()
+
         logger.log(f'Reading changes between'
                    f' {config.from_release_tag}'
                    f' and {config.to_release_tag} from git')
         changes = git.read_changes(config.git_repo,
-                                   config.from_release_tag,
-                                   config.to_release_tag,
+                                   from_git_hash,
+                                   to_git_hash,
                                    logger)
     except git.ParseError as e:
         logger.log_error(f'Error: {e}')
