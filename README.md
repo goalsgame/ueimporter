@@ -113,14 +113,20 @@ before we publish it to `main`.
 
 
 ## Prequestives <a name="prequestives" />
-* Python 3.10+
-* Git
-* [Plastic scm](https://www.plasticscm.com)
-Plastics CLI tool `cm` needs to be present in `PATH`
-* A clone of the [UnrealEngine git repo](https://github.com/EpicGames/UnrealEngine).
+
+#### Python 3.10+
+
+#### Git
+
+#### Plastic CLI
+A [Plastics](https://www.plasticscm.com) CLI tool `cm` needs to be present in `PATH`.
+
+#### Clone of the [UnrealEngine git repo](https://github.com/EpicGames/UnrealEngine)
 Your github user will need to be a registered unreal developer to get access.
-* A release zip for the UE release you want to import.
-As listed here [UnrealEngine/releases](https://github.com/EpicGames/UnrealEngine/releases)
+See [How do I access Unreal Engine 4 C++ source code via GitHub?](https://www.unrealengine.com/en-US/ue4-on-github)
+
+#### Release zip for the UE release you want to import.
+You can find zips/tarballs for all UE releases under [UnrealEngine/releases](https://github.com/EpicGames/UnrealEngine/releases)
 
 ## Installation <a name="install" />
 
