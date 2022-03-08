@@ -74,8 +74,7 @@ def create_parser():
                         Default is .ueimporter/ueimporter.log
                         """)
     parser.add_argument('--log-level',
-                        type=LogLevel.from_string,
-                        default=LogLevel.NORMAL,
+                        default=str(LogLevel.NORMAL).lower(),
                         choices=[str(l).lower() for l in list(LogLevel)],
                         help="""
                         Controls the detail level of logs that show up
@@ -390,7 +389,8 @@ def main():
     parser = create_parser()
     args = parser.parse_args()
 
-    logger = Logger(args.log_file, args.log_level)
+    log_level = LogLevel.from_string(args.log_level)
+    logger = Logger(args.log_file, log_level)
     config = create_config(args, logger)
 
     if not config.pretend and not verify_plastic_repo_state(config, logger):
