@@ -92,7 +92,7 @@ class Repo:
         return self.repo_root.joinpath(path)
 
     def rev_parse(self, ref, logger):
-        return self.run_cmd(['rev-parse', ref], logger)
+        return self.run_cmd(['rev-parse', ref], logger).rstrip('\r\n')
 
     def diff(self, from_ref, to_ref, logger):
         arguments = [
