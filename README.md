@@ -18,6 +18,7 @@ by replicating changes from the official
     1. [Development mode](#install-dev-mode)
 
 1. [Usage](#usage)
+    1. [Step by step guide](#usage-guide)
     1. [Required Arguments](#usage-args-required)
     1. [Optional Arguments](#usage-args-optional)
 
@@ -160,7 +161,7 @@ $ pip install --user -e .
 
 ## Usage <a name="usage" />
 
-### Step by step guide
+### Step by step guide <a name="usage-guide" />
 
 #### 1. Switch to the lastest changeset on plastics vendor branch
 
