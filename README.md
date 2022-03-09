@@ -19,8 +19,8 @@ by replicating changes from the official
 
 1. [Usage](#usage)
     1. [Step by step guide](#usage-guide)
-    1. [Required Arguments](#usage-args-required)
-    1. [Optional Arguments](#usage-args-optional)
+    1. [Required arguments](#usage-args-required)
+    1. [Optional arguments](#usage-args-optional)
 
 1. [Development](#dev)
     1. [Debugging](#dev-debug)
@@ -230,7 +230,7 @@ the new release with your `main` branch.
 Now you have a smoking fresh engine release. Next step is to merge it into your development branch (`main`). That
 is out of scope for this guide.
 
-### Required Arguments <a name="usage-args-required" />
+### Required arguments <a name="usage-args-required" />
 
 #### --git-repo-root
 Specifies the root of the UE git repo on disc. Create this directory with
@@ -246,7 +246,7 @@ Tags is listed here [EpicGames/UnrealEngine/tags](https://github.com/EpicGames/U
 Specifies where release zip files have been extracted.
 Zip files can be downloaded from [EpicGames/UnrealEngine/releases](https://github.com/EpicGames/UnrealEngine/releases)
 
-### Optional Arguments <a name="usage-args-optional" />
+### Optional arguments <a name="usage-args-optional" />
 
 #### --pretend
 Set to print what is about to happen without doing anything.
