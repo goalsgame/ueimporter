@@ -76,7 +76,7 @@ are checked in.
 
 # Suggested branch layout <a name="branch-layout" />
 
-![Branch Layout ](/ueimporter/images/ueimporter-branch-layout-4.27.0-4.27.2.png)
+![Branch Layout ](/images/ueimporter-branch-layout-4.27.0-4.27.2.png)
 
 Here we see a suggested branch layout. The game itself is developed on `main`
 , on `vendor-unreal-engine` we keep unmodified Unreal Engine releases and finally
