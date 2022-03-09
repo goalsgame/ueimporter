@@ -9,21 +9,21 @@ by replicating changes from the official
 ## Table of Contents
 1. [Overview](#overview)
 
-2. [Suggested branch layout](#branch-layout)
+1. [Suggested branch layout](#branch-layout)
 
-3. [Prequestives](#prequestives)
+1. [Prequestives](#prequestives)
 
-4. [Installation](#install)
+1. [Installation](#install)
     1. [Uninstall](#install-uninstall)
-    2. [Development mode](#install-dev-mode)
+    1. [Development mode](#install-dev-mode)
 
-5. [Usage](#usage)
+1. [Usage](#usage)
     1. [Required Arguments](#usage-args-required)
     1. [Optional Arguments](#usage-args-optional)
 
-6. [Development](#dev)
+1. [Development](#dev)
     1. [Debugging](#dev-debug)
-    2. [Testing](#dev-test)
+    1. [Testing](#dev-test)
 
 
 ## Overview
