@@ -289,7 +289,7 @@ If set, results of heavy git commands will be stored in this directory.
 Make sure to install `ueimporter` in dev mode, as described [above](#install-dev-mode).
 
 ### Debugging <a name="dev-debug" />
-To debug you can use pythons build in `pdb` module
+To debug you can use pythons built in `pdb` module
 
 ```
 $ cd ueimporter
