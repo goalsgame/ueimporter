@@ -293,7 +293,6 @@ Make sure to install `ueimporter` in dev mode, as described [above](#install-dev
 To debug you can use pythons built in `pdb` module
 
 ```
-$ cd ueimporter
 $ python -m pdb ueimporter\main.py $(YOUR_OPTIONS)
 ```
 
