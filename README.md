@@ -9,21 +9,21 @@ by replicating changes from the official
 ## Table of Contents
 1. [Overview](#overview)
 
-2. [Suggested branch layout](#branch-layout)
+1. [Suggested branch layout](#branch-layout)
 
-3. [Prequestives](#prequestives)
+1. [Prequestives](#prequestives)
 
-4. [Installation](#install)
+1. [Installation](#install)
     1. [Uninstall](#install-uninstall)
-    2. [Development mode](#install-dev-mode)
+    1. [Development mode](#install-dev-mode)
 
-5. [Usage](#usage)
-    1. [Required Arguments](#usage-args-required)
-    1. [Optional Arguments](#usage-args-optional)
+1. [Usage](#usage)
+    1. [Step by step guide](#usage-guide)
+    1. [Arguments](#usage-args)
 
-6. [Development](#dev)
+1. [Development](#dev)
     1. [Debugging](#dev-debug)
-    2. [Testing](#dev-test)
+    1. [Testing](#dev-test)
 
 
 ## Overview
@@ -160,7 +160,7 @@ $ pip install --user -e .
 
 ## Usage <a name="usage" />
 
-### Step by step guide
+### Step by step guide <a name="usage-guide" />
 
 #### 1. Switch to the lastest changeset on plastics vendor branch
 
@@ -229,44 +229,46 @@ the new release with your `main` branch.
 Now you have a smoking fresh engine release. Next step is to merge it into your development branch (`main`). That
 is out of scope for this guide.
 
-### Required Arguments <a name="usage-args-required" />
+### Arguments <a name="usage-args" />
 
-#### --git-repo-root
+#### Required arguments <a name="usage-args-required" />
+
+##### --git-repo-root
 Specifies the root of the UE git repo on disc. Create this directory with
 ```
 $ git clone git@github.com:EpicGames/UnrealEngine.git
 ```
 
-#### --to-release-tag
+##### --to-release-tag
 Git tag of release to upgrade to.
 Tags is listed here [EpicGames/UnrealEngine/tags](https://github.com/EpicGames/UnrealEngine/tags)
 
-#### --zip-package-root
+##### --zip-package-root
 Specifies where release zip files have been extracted.
 Zip files can be downloaded from [EpicGames/UnrealEngine/releases](https://github.com/EpicGames/UnrealEngine/releases)
 
-### Optional Arguments <a name="usage-args-optional" />
+#### Optional arguments <a name="usage-args-optional" />
 
-#### --pretend
+##### --pretend
 Set to print what is about to happen without doing anything.
 
-#### --plastic-workspace-root
+##### --plastic-workspace-root
 Specifies the root of the UE plastic workspace on disc.
 Default is current working directory (CWD).
 
-#### --from-release-tag
+##### --from-release-tag
 Git tag of release currently used.
 Required whenever a `ueimporter.json` file does not exist.
 
-#### --ueimporter-json
+##### --ueimporter-json
 Name of file where last integrated UE version will be stored.
 Default is `.ueimporter.json`.
 
-#### --log-file
+##### --log-file
 Name of log file where all output is saved.
 Default is `.ueimporter/ueimporter.log`.
 
-#### --log-level
+##### --log-level
 Controls the detail level of logs that show up in `STDOUT`.
 All levels always ends up in the logfile.
 
@@ -277,10 +279,10 @@ Available log levels
 * verbose
 * debug
 
-#### --skip-invalid-ops
+##### --skip-invalid-ops
 Skip operations that will fail when executed. Equivalent to choosing `skip-all` in the interactive prompt.
 
-#### --git-command-cache
+##### --git-command-cache
 If set, results of heavy git commands will be stored in this directory.
 
 ## Development <a name="dev" />
@@ -288,7 +290,7 @@ If set, results of heavy git commands will be stored in this directory.
 Make sure to install `ueimporter` in dev mode, as described [above](#install-dev-mode).
 
 ### Debugging <a name="dev-debug" />
-To debug you can use pythons build in `pdb` module
+To debug you can use pythons built in `pdb` module
 
 ```
 $ cd ueimporter
