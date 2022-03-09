@@ -19,8 +19,7 @@ by replicating changes from the official
 
 1. [Usage](#usage)
     1. [Step by step guide](#usage-guide)
-    1. [Required arguments](#usage-args-required)
-    1. [Optional arguments](#usage-args-optional)
+    1. [Arguments](#usage-args)
 
 1. [Development](#dev)
     1. [Debugging](#dev-debug)
@@ -230,44 +229,46 @@ the new release with your `main` branch.
 Now you have a smoking fresh engine release. Next step is to merge it into your development branch (`main`). That
 is out of scope for this guide.
 
-### Required arguments <a name="usage-args-required" />
+### Arguments <a name="usage-args" />
 
-#### --git-repo-root
+#### Required arguments <a name="usage-args-required" />
+
+##### --git-repo-root
 Specifies the root of the UE git repo on disc. Create this directory with
 ```
 $ git clone git@github.com:EpicGames/UnrealEngine.git
 ```
 
-#### --to-release-tag
+##### --to-release-tag
 Git tag of release to upgrade to.
 Tags is listed here [EpicGames/UnrealEngine/tags](https://github.com/EpicGames/UnrealEngine/tags)
 
-#### --zip-package-root
+##### --zip-package-root
 Specifies where release zip files have been extracted.
 Zip files can be downloaded from [EpicGames/UnrealEngine/releases](https://github.com/EpicGames/UnrealEngine/releases)
 
-### Optional arguments <a name="usage-args-optional" />
+#### Optional arguments <a name="usage-args-optional" />
 
-#### --pretend
+##### --pretend
 Set to print what is about to happen without doing anything.
 
-#### --plastic-workspace-root
+##### --plastic-workspace-root
 Specifies the root of the UE plastic workspace on disc.
 Default is current working directory (CWD).
 
-#### --from-release-tag
+##### --from-release-tag
 Git tag of release currently used.
 Required whenever a `ueimporter.json` file does not exist.
 
-#### --ueimporter-json
+##### --ueimporter-json
 Name of file where last integrated UE version will be stored.
 Default is `.ueimporter.json`.
 
-#### --log-file
+##### --log-file
 Name of log file where all output is saved.
 Default is `.ueimporter/ueimporter.log`.
 
-#### --log-level
+##### --log-level
 Controls the detail level of logs that show up in `STDOUT`.
 All levels always ends up in the logfile.
 
@@ -278,10 +279,10 @@ Available log levels
 * verbose
 * debug
 
-#### --skip-invalid-ops
+##### --skip-invalid-ops
 Skip operations that will fail when executed. Equivalent to choosing `skip-all` in the interactive prompt.
 
-#### --git-command-cache
+##### --git-command-cache
 If set, results of heavy git commands will be stored in this directory.
 
 ## Development <a name="dev" />
