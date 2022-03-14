@@ -209,7 +209,7 @@ def create_config(args, logger):
     if not from_release_tag:
         logger.log_error(
             f'Error: Please specify a git release tag with either'
-            f'a {args.ueimporter_json} file or --from-release-tag')
+            f' a {args.ueimporter_json} file or --from-release-tag')
         sys.exit(1)
 
     if not args.to_release_tag:
