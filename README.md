@@ -87,7 +87,7 @@ In this example, the first changesets on `main` contains change unrelated to Unr
 in fact after the second changeset there is not a single file from the engine present.
 
 From the very first changeset (where no files exist) we create the `vendor-unreal-engine` branch,
-and the first commit to it is a simple copy paste of the all files found in
+and the first changeset to it is a simple copy paste of the all files found in
 [4.27.0-release.tar.gz](https://github.com/EpicGames/UnrealEngine/releases/tag/4.27.0-release).
 Make sure to add and check in files on either macOs or Linux or else file permission flags
 such as (+x) will not be recorded in plastic.
