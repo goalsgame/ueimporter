@@ -140,3 +140,21 @@ from the new release.
 
 This process is very scriptable, and I wrote a commandline tool (in python)
 that takes care of it all. We at Goals hope to be able to open source this soon.
+
+## Parting words
+
+With this setup you have the power to change the engine at will, how you weild this power is up to you.
+
+Consider that any merge conflicts you get with new engine releases, after making local engine changes, will need to be resolved.
+This is a manual process that is hard to automate. In the past, when working in another big game engine, I have seen
+many, many, **many** dev-months been sunk into resolving merge conflicts, and follow up issues, due to local modifications,
+when the engine was upgraded.
+
+If you can, keep your engine changes small and isolated, and tag changed lines with begin/end comments. If
+a change can be done in your game module is the prefered way.
+
+Another good example is that you can cherry-pick fixes from Epics mainline and push directly into your own `main`.
+Later, when the fix gets included in an official release your divergence should just resolve itself in the upgrade
+process.
+
+Stay safe, take care and happy game making.
