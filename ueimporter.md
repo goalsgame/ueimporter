@@ -67,7 +67,7 @@ This image contains a thousand words, spelled out it becomes:
 
 So, how do you import or upgrade the engine source code into our `vendor-unreal-engine`?
 
-### Import by delete and readding all files
+### Import by delete and re-adding all files
 
 One crude strategy is to delete all files on the vendor branch and simply
 copy all files from the new release, and then let plastic detect which files have
