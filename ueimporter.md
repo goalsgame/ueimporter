@@ -114,7 +114,7 @@ The leading column means:
 * `A` - File was added
 * `D` - File was deleted
 * `R*` - File was renamed or moved.
-  The number is a percentage of how certain gitis that the file was in fact moved, and not a delete followed
+  The number is a percentage of how certain git is that the file was in fact moved, and not a delete followed
   by an add.
   There is some grey area in moves when it comes to git, sometimes a file is moved, but then modified
   to fit in its new location. For example, a moved `C++` file may need to have paths to includes
@@ -138,5 +138,5 @@ For moves we start by creating and adding target directories to before we
 tell plastic to move the file. Finally, we copy the contents of the file
 from the new release.
 
-This problem is very scriptable, and I wrote a commandline python tool
+This process is very scriptable, and I wrote a commandline tool (in python)
 that takes care of it all. We at Goals hope to be able to open source this soon.
