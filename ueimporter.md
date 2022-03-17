@@ -139,8 +139,9 @@ For moves we start by creating and adding target directories to before we
 tell Plastic to move the file. Finally, we copy the contents of the file
 from the new release.
 
-This process is very scriptable, and I wrote a commandline tool (in python)
-that takes care of it all. We at Goals hope to be able to open source this soon.
+This process is very scriptable, and I wrote a commandline tool
+that takes care of it all. I'm happy to announce that Goals have now open-sourced this
+, available in GitHub for your pleasure as [goalsgame/ueimporter](https://github.com/goalsgame/ueimporter).
 
 ## Ignoring the elephant in the room
 
