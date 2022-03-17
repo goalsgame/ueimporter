@@ -15,7 +15,7 @@ Full engine source code is served via
 to which you get access by registering your GitHub user with Epic.
 See [How do I access Unreal Engine 4 C++ source code via GitHub?](https://www.unrealengine.com/en-US/ue4-on-github)
 
-Each official engine release is labeled with a git tag, for example
+Each official engine release is labeled with a Git tag, for example
 [4.27.2-release](https://github.com/EpicGames/UnrealEngine/releases/tag/4.27.2-release)
 or
 [5.0.0-preview-2](https://github.com/EpicGames/UnrealEngine/releases/tag/5.0.0-preview-2).
@@ -47,7 +47,7 @@ upgrade to `4.27.1` and finally `4.27.2`.
 ![Branch Layout](/images/unreal-engine-in-plastic-branch-layout.png)
 
 This image contains a thousand words, spelled out it becomes:
-1. Start with an empty plastic repo
+1. Start with an empty Plastic repo
 1. Add `4.27.0` to `vendor-unreal-engine`
 1. Make a small tweak to the engine itself.
 1. Merge it all down into `main`
@@ -70,7 +70,7 @@ So, how do you import or upgrade the engine source code into our `vendor-unreal-
 ### Import by delete and re-adding all files
 
 One crude strategy is to delete all files on the vendor branch and simply
-copy all files from the new release, and then let plastic detect which files have
+copy all files from the new release, and then let Plastic detect which files have
 been added, removed, modified or moved.
 
 This should work well. Alas, plastics move detection seem to miss
@@ -80,17 +80,17 @@ to be practically possible? It would be understandable, upgrading
 
 One downside is that moved files will be imported as a delete followed by an add.
 If you have made changes to the file in the old location on your `main`-branch
-, plastic will not help you merge these changes into the file in it's new location.
+, Plastic will not help you merge these changes into the file in it's new location.
 Plastic will ask you how to resolve your changes to the old file, and you will have
 to manually copy it into the new location.
 
 Depending on how widespread your changes to the engine code is this strategy
 might be good enough, for us at Goals it was not.
 
-### Import by replicating changes from git
+### Import by replicating changes from Git
 
 Luckily, we can do better. Full revision history is available in the main
-git repo, it knows which files has been modified, added or removed, and most
+Git repo, it knows which files has been modified, added or removed, and most
 importantly it also knows which files have been renamed or moved.
 
 The command we use is `git diff --name-status`, here's the output of
@@ -114,20 +114,20 @@ The leading column means:
 * `A` - File was added
 * `D` - File was deleted
 * `R*` - File was renamed or moved.
-  The number is a percentage of how certain git is that the file was in fact moved, and not a delete followed
+  The number is a percentage of how certain Git is that the file was in fact moved, and not a delete followed
   by an add.
-  There is some grey area in moves when it comes to git, sometimes a file is moved, but then modified
+  There is some grey area in moves when it comes to Git, sometimes a file is moved, but then modified
   to fit in its new location. For example, a moved `C++` file may need to have paths to includes
   tweaked to compile. Git uses some fuzzy heuristict to discern moves from adds+deletes, I don't know the details,
   but most of the time it seems to be correct. I've only came across one case where it guess was plain wrong.
 
 Now it's just a matter of replicating these changes in `vendor-unreal-engine`.
 
-Modified files is simple, just check out in plastic and copy the file from the
+Modified files is simple, just check out in Plastic and copy the file from the
 new release.
 
 Adding files is almost as easy, just copy their content. But, if the target
-folder does not exist in plastic we need to first create and add it before
+folder does not exist in Plastic we need to first create and add it before
 we copy the file.
 
 For deletes, the opposite of adds, we start by deleting the file itself.
@@ -135,7 +135,7 @@ If the folder in which it existed became empty we need to remove the folder,
 we also need to delete any now empty parent directories.
 
 For moves we start by creating and adding target directories to before we
-tell plastic to move the file. Finally, we copy the contents of the file
+tell Plastic to move the file. Finally, we copy the contents of the file
 from the new release.
 
 This process is very scriptable, and I wrote a commandline tool (in python)
