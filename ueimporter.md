@@ -141,6 +141,81 @@ from the new release.
 This process is very scriptable, and I wrote a commandline tool (in python)
 that takes care of it all. We at Goals hope to be able to open source this soon.
 
+## Ignoring the elephant in the room
+
+If you have ever tried to store Unreal Engine source inside Plastic, you may have
+noticed a rather big elephant that I so far avoided to mention; Plastics ignore
+file, and it's incompatibility with Gits equivalent.
+
+As you may know, Unreal Engines GitHub repo comes with a rather complex `.gitignore` file. Whenever you build
+or work with the engine various intermediate and temporary files is scattered all over your workspace.
+These files should not be committed into Git, and likewise we do not want them checked into Plastic.
+
+It is not possible to directly translate Gits `.gitignore` file into Plastics `ignore.conf`,
+the two systems have rather different rules deciding in what order ignore patterns are applied.
+
+### Ignoring in Git
+
+On one hand, we have Git, where each line specifies a file or directory pattern, any subsequent matching
+line will override preceding matches. A simple philosophy that is relatively easy to understand.
+
+If we compress Unreals `.gitignore` into a nutshell, it can be described like this:
+1. Start by ignoring **all** files
+1. Adds exceptions to **not ignore** certain extensions,
+   For instance `*.h` and `*.cpp`.
+1. Add exceptions to those exceptions to ignore temporary build folders completely.
+   For example `Engine/Intermediate/`, or else the `*.h` and `*.cpp` files that
+   `UnrealHeaderTool` generates during the build process would be tracked.
+
+On and on the list goes, with more detailed exceptions and ignore patterns.
+There are close to 160 rules listed in the ignore file for the `5.0.0-preview-2` release.
+
+### Plastic ignorance is not a bliss
+
+Then we have Plastic, it prioritize patterns based on which type of pattern it is,
+rather than in what order they occur in its `ignore.conf`. Two patterns of the same type
+are applied in the order they appear in the file. Exception patterns take presendence over
+ignore patterns.
+
+So what pattern types are we talking about? Quoting the
+[Pattern evaluation hierarchy](https://www.plasticscm.com/book/#_pattern_files)
+section of the `Version Control, DevOps and Agile Development with Plastic SCM` book.
+>> Plastic SCM will try to match the path of an item using the patterns in the file in a predefined way.
+>> This means that some pattern formats take precedence over others rather than processing the patterns
+>> in the order they appear in the file.
+>>
+>> 1. Absolute path rules that match exactly
+>> 2. Catch-all rules
+>> 3. Name rules applied to the current item
+>> 4. Absolute path rules applied to the item directory structure
+>> 5. Name rules applied to the item directory structure
+>> 6. Extension rules
+>> 7. Wildcard and Regular expression rules
+
+There are more devils in the details, but that's the gist of it.
+
+Unreals `.gitignore` use most of these ignore types, but of course relies on the order to accomplish desired ignore
+behaviour. Just copy pasting this to Plastic does not work, because it wreaks havoc to this order.
+
+### A workaround
+
+We at Goals have wrestled quite a bit with this, trying to come up with equivalent ignore behaviour in Plastic.
+But so far we haven't nailed it, but have at least arrived at a workaround.
+We simply ignore the entire `/Engine`-folder, that gets rid of most of the intermediate and temporary
+files that is explicitly ignored in `.gitignore`.
+The main drawback with this is that we have to manually remember to add files to Plastic,
+if we were to add anything to `Engine`, or else it will not show up as a pending change.
+We can edit files that are already checked into Plastic just fine, it will be detected as changed.
+
+
+### Ignore files and our vendor branch
+
+Thankfully, the ignore file is irrelevant on our `vendor-unreal-engine` branch,
+here we always want Plastic to detect all files, so that we can check them in
+and later have them merged into `main`.
+You should never build or do anything to pollute your workspace when you are on this branch,
+and make sure to clear out any private files before you start importing a new engine release.
+
 ## Parting words
 
 With this setup you have the power to change the engine at will, how you weild this power is up to you.
