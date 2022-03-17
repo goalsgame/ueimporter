@@ -81,10 +81,10 @@ to be practically possible? It would be understandable, upgrading
 One downside is that moved files will be imported as a delete followed by an add.
 If you have made changes to the file in the old location on your `main`-branch
 , Plastic will not help you merge these changes into the file in it's new location.
-Plastic will ask you how to resolve your changes to the old file, and you will have
-to manually copy it into the new location.
+Instead, it will ask you how to resolve your changes to the old deleted file, forcing
+you to manually copy your changes into the new location.
 
-Depending on how widespread your changes to the engine code is this strategy
+Depending on how widespread your changes to the engine code are, this strategy
 might be good enough, for us at Goals it was not.
 
 ### Import by replicating changes from Git
@@ -116,12 +116,13 @@ The leading column means:
 * `R*` - File was renamed or moved.
   The number is a percentage of how certain Git is that the file was in fact moved, and not a delete followed
   by an add.
-  There is some grey area in moves when it comes to Git, sometimes a file is moved, but then modified
-  to fit in its new location. For example, a moved `C++` file may need to have paths to includes
+  There is some grey area when it comes to moves in Git, sometimes a file is moved, but then modified
+  to fit in its new location. For example, a moved `C++` file may need to have include paths
   tweaked to compile. Git uses some fuzzy heuristict to discern moves from adds+deletes, I don't know the details,
-  but most of the time it seems to be correct. I've only came across one case where it guess was plain wrong.
+  but most of the time it seems make good guesses. When it fails it isn't such a big deal;
+  the file in the old location was deleted, and the content of the new location will be correct.
 
-Now it's just a matter of replicating these changes in `vendor-unreal-engine`.
+Now, it's just a matter of replicating these changes in `vendor-unreal-engine`.
 
 Modified files is simple, just check out in Plastic and copy the file from the
 new release.
@@ -144,11 +145,12 @@ that takes care of it all. We at Goals hope to be able to open source this soon.
 ## Ignoring the elephant in the room
 
 If you have ever tried to store Unreal Engine source inside Plastic, you may have
-noticed a rather big elephant that I so far avoided to mention; Plastics ignore
+noticed a rather big elephant that I so far avoided; Plastics ignore
 file, and it's incompatibility with Gits equivalent.
 
 As you may know, Unreal Engines GitHub repo comes with a rather complex `.gitignore` file. Whenever you build
-or work with the engine various intermediate and temporary files is scattered all over your workspace.
+or work with the engine various intermediate and temporary files is scattered all over your workspace,
+not to mention the thousands of files that is downloaded when you run `Setup.bat`.
 These files should not be committed into Git, and likewise we do not want them checked into Plastic.
 
 It is not possible to directly translate Gits `.gitignore` file into Plastics `ignore.conf`,
@@ -197,7 +199,7 @@ There are more devils in the details, but that's the gist of it.
 Unreals `.gitignore` use most of these ignore types, but of course relies on the order to accomplish desired ignore
 behaviour. Just copy pasting this to Plastic does not work, because it wreaks havoc to this order.
 
-### A workaround
+### An acceptable workaround
 
 We at Goals have wrestled quite a bit with this, trying to come up with equivalent ignore behaviour in Plastic.
 But so far we haven't nailed it, but have at least arrived at a workaround.
@@ -206,7 +208,6 @@ files that is explicitly ignored in `.gitignore`.
 The main drawback with this is that we have to manually remember to add files to Plastic,
 if we were to add anything to `Engine`, or else it will not show up as a pending change.
 We can edit files that are already checked into Plastic just fine, it will be detected as changed.
-
 
 ### Ignore files and our vendor branch
 
@@ -218,7 +219,8 @@ and make sure to clear out any private files before you start importing a new en
 
 ## Parting words
 
-With this setup you have the power to change the engine at will, how you weild this power is up to you.
+With this setup you have the power to change the engine at will, and still stay up to date with new releases,
+how you wield this power is up to you.
 
 Consider that any merge conflicts you get with new engine releases, after making local changes, will need to be resolved.
 This is a manual process that is hard to automate. In the past, when working in another big game engine, I have seen
