@@ -237,15 +237,15 @@ This is a manual process that is hard to automate. In the past, when working in 
 many, many, **many** dev-months been sunk into resolving merge conflicts and follow up issues, due to local modifications
 when the engine was upgraded.
 
-Upgrading the engine often, the further you diverge from Epics mainline the harder it will be to catch up. Upgrade one version
-at a time, even if you are more than one version behind. In their [Fish Slapping Dance](https://www.youtube.com/watch?v=AaZrAjkBhlM)
-Monty Python teach us that it's better to be slapped with a small pilchard multiple times than it is to be slapped by a big fat halibut just once.
-
 Keep your engine changes small and isolated, and tag changed lines with begin/end comments. If
 a change can be done in your game module or a plugin that is the preferred way.
 
 One benefit with this setup, is that you can cherry-pick fixes from Epics mainline and push directly into your own `main`.
 Later, when the fix gets included in an official release your divergence should just resolve itself in the upgrade
 process.
+
+Finally, upgrade the engine often, the further you diverge from Epics mainline the harder it will be to catch up. Take one version
+at a time, even if you are more than one version behind. In their [Fish Slapping Dance](https://www.youtube.com/watch?v=AaZrAjkBhlM)
+Monty Python teach us that it's better to be slapped with a small pilchard multiple times than it is to be slapped by a big fat halibut just once.
 
 Take care, stay safe and happy game making.
