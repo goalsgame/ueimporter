@@ -186,17 +186,17 @@ ignore patterns.
 So what pattern types are we talking about? Quoting the
 [Pattern evaluation hierarchy](https://www.plasticscm.com/book/#_pattern_files)
 section of the `Version Control, DevOps and Agile Development with Plastic SCM` book.
->> Plastic SCM will try to match the path of an item using the patterns in the file in a predefined way.
->> This means that some pattern formats take precedence over others rather than processing the patterns
->> in the order they appear in the file.
->>
->> 1. Absolute path rules that match exactly
->> 2. Catch-all rules
->> 3. Name rules applied to the current item
->> 4. Absolute path rules applied to the item directory structure
->> 5. Name rules applied to the item directory structure
->> 6. Extension rules
->> 7. Wildcard and Regular expression rules
+> Plastic SCM will try to match the path of an item using the patterns in the file in a predefined way.
+> This means that some pattern formats take precedence over others rather than processing the patterns
+> in the order they appear in the file.
+>
+> 1. Absolute path rules that match exactly
+> 2. Catch-all rules
+> 3. Name rules applied to the current item
+> 4. Absolute path rules applied to the item directory structure
+> 5. Name rules applied to the item directory structure
+> 6. Extension rules
+> 7. Wildcard and Regular expression rules
 
 There are more devils in the details, but that's the gist of it.
 
