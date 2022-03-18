@@ -1,5 +1,7 @@
 # Working with Unreal Engine source releases in Plastic SCM
 
+![Article Header](/images/unreal-engine-in-plastic-header.png)
+
 This guide is for [Plastic SCM](https://www.plasticscm.com) users, that want to
 build a game using [Unreal Engine](https://www.unrealengine.com)
 , and plan to compile and make changes to the engine code itself, while also
