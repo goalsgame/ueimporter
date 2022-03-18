@@ -118,7 +118,7 @@ The leading column means:
 
   Git uses some fuzzy heuristics to discern moves from adds and deletes. Most of the time
   it seems to make good guesses. When it fails it is not a big deal; the old location will still be deleted,
-  and the name, location and content of the file will be correct.
+  and the name, location and content of the added file will be correct.
 
 Now, it's just a matter of replicating these changes in `vendor-unreal-engine`.
 
@@ -207,19 +207,19 @@ So far, we haven't nailed it, but have at least arrived at a config file that we
 We simply ignore the entire `Engine`-folder, that gets rid of most of the intermediate and temporary
 files that is explicitly ignored in `.gitignore`.
 The main drawback with this is that we must remember to manually add files to Plastic,
-whenever we add anything to `Engine`, or else it will not show up as a pending change.
-We can edit files that are already checked into Plastic just fine, they will be detected as changed.
+whenever we add anything to `Engine`, or else it will not show up as a pending change that can be
+checked in. We can edit files that are already checked into Plastic just fine, they will be detected as changed.
 
 For our games own modules and plugins it was relatively easy to write ignore rules, mainly because
-Unreal mostly write files to `Engine` during the setup process and build artifacts all end
+Unreal write most files to `Engine` during the setup process and build artifacts all end
 up in easily idendified intermediate folders.
 
 ### Ignore files and our vendor branch
 
-Thankfully, the ignore file is irrelevant on our `vendor-unreal-engine` branch,
-here we always want Plastic to detect all files, so that we can check them in
+Thankfully, the ignore file is irrelevant on our `vendor-unreal-engine` branch.
+Here we always want Plastic to detect all files, so that we can check them in
 and later have them merged into `main`.
-This assumes that you clear out any private files before you start importing a new engine release
+This implies that you must clear out any private files before you start importing a new engine release
 to the vendor branch. You should not build or do anything to pollute your workspace here, do that
 on an upgrade branch after merging with main.
 
