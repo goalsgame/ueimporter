@@ -221,7 +221,7 @@ Here we always want Plastic to detect all files, so that we can check them in
 and later have them merged into `main`.
 This implies that you must clear out any private files before you start importing a new engine release
 to the vendor branch. You should not build or do anything to pollute your workspace here, do that
-on an upgrade branch after merging with main (where a ignore file is present).
+on an upgrade branch after merging with main (where an ignore file is present).
 
 ## Parting words
 
