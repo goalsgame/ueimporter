@@ -98,15 +98,11 @@ the diff between `4.27.1` and `4.27.2`. Note that this is just an excerpt,
 the real diff contains roughly 460 changes.
 
 ```sh
-$ git diff –-name-status 4.27.1-release 4.27.2-release
-M     Engine/Build/Build.version
-A     Engine/Extras/ThirdPartyNotUE/libimobiledevice/src/libimobiledevice-vs/usbmuxd/.gitattributes
-A     Engine/Extras/ThirdPartyNotUE/libimobiledevice/src/libimobiledevice-vs/usbmuxd/.gitignore
-R100  Engine/Source/Runtime/Core/Public/HAL/PlatformFilemanager.h Engine/Source/Runtime/Core/Public/HAL/PlatformFileManager.h
-D     Engine/Source/ThirdParty/ShaderConductor/ShaderConductor/External/DirectXShaderCompiler/tools/clang/lib/SPIRV/SPIRVContext.cpp
-A     Engine/Source/ThirdParty/ShaderConductor/ShaderConductor/External/DirectXShaderCompiler/tools/clang/lib/SPIRV/SpirvContext.cpp
-R087  Engine/Source/ThirdParty/ShaderConductor/ShaderConductor/External/DirectXShaderCompiler/tools/clang/lib/SPIRV/SPIRVEmitter.cpp Engine/Source/ThirdParty/ShaderConductor/ShaderConductor/External/DirectXShaderCompiler/tools/clang/lib/SPIRV/SpirvEmitter.cpp
-R095  Engine/Source/ThirdParty/ShaderConductor/ShaderConductor/External/DirectXShaderCompiler/tools/clang/lib/SPIRV/SPIRVEmitter.h Engine/Source/ThirdParty/ShaderConductor/ShaderConductor/External/DirectXShaderCompiler/tools/clang/lib/SPIRV/SpirvEmitter.h
+$ git diff --name-status 4.27.1-release 4.27.2-release
+M	Engine/Build/Build.version
+A	Engine/Extras/Containers/Dockerfiles/linux/dev-slim/Dockerfile
+D	Engine/Source/Programs/Enterprise/Datasmith/DatasmithSolidworksExporter/Private/Animations/AnimationExtractor.cs
+R064	Samples/PixelStreaming/WebServers/SignallingWebServer/platform_scripts/cmd/run.bat	Samples/PixelStreaming/WebServers/SignallingWebServer/platform_scripts/cmd/run_local.bat
 ```
 
 The leading column means:
