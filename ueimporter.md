@@ -78,7 +78,7 @@ most moves, maybe there are too many files involved in engine upgrades for it
 to be practically possible? It would be understandable, upgrading
 `4.27.2` to `5.0.0-early-access-1` modifies over 50k files.
 
-One downside is that moved files will be imported as a delete followed by an add.
+As a result, moved files will be imported as a delete followed by an add.
 If you have made changes to the file in the old location on your `main`-branch
 , Plastic will not help you merge these changes into the file in its new location.
 Instead, it will ask you how to resolve your changes to the old, deleted file.
@@ -176,12 +176,12 @@ If we compress Unreals `.gitignore` into a nutshell, it can be described like th
 On and on the list goes, with more detailed exceptions and ignore patterns.
 There are close to 160 rules listed in the ignore file for the `5.0.0-preview-2` release.
 
-### Plastic ignorance is not a bliss
+### Ignorance is not a bliss in Plastic
 
 Then we have Plastic, it prioritizes patterns based on its type,
 rather than in what order it occur in its `ignore.conf`. Two patterns of the same type
 are applied in the order they appear in the file. Exception patterns take precedenceover
-ignore patterns.
+ignore patterns of the same type.
 
 So what pattern types are we talking about? Quoting the
 [Pattern evaluation hierarchy](https://www.plasticscm.com/book/#_pattern_files)
@@ -216,7 +216,7 @@ We can edit files that are already checked into Plastic just fine, they will be 
 
 For our games own modules and plugins it was relatively easy to write ignore rules, mainly because
 Unreal mostly write files to `Engine` during the setup process and build artifacts all end
-up in `Intermediate` folders.
+up in easily idendified intermediate folders.
 
 ### Ignore files and our vendor branch
 
@@ -224,7 +224,7 @@ Thankfully, the ignore file is irrelevant on our `vendor-unreal-engine` branch,
 here we always want Plastic to detect all files, so that we can check them in
 and later have them merged into `main`.
 This assumes that you clear out any private files before you start importing a new engine release
-. You should not build or do anything to pollute your workspace here, do that
+to the vendor branch. You should not build or do anything to pollute your workspace here, do that
 on an upgrade branch after merging with main.
 
 ## Parting words
@@ -237,10 +237,14 @@ This is a manual process that is hard to automate. In the past, when working in 
 many, many, **many** dev-months been sunk into resolving merge conflicts and follow up issues, due to local modifications
 when the engine was upgraded.
 
-If you can, keep your engine changes small and isolated, and tag changed lines with begin/end comments. If
+Upgrading the engine often, the further you diverge from Epics mainline the harder it will be to catch up. Upgrade one version
+at a time, even if you are more than one version behind. In their [Fish Slapping Dance](https://www.youtube.com/watch?v=AaZrAjkBhlM)
+Monty Python teach us that it's better to be slapped with a small pilchard multiple times than it is to be slapped by a big fat halibut just once.
+
+Keep your engine changes small and isolated, and tag changed lines with begin/end comments. If
 a change can be done in your game module or a plugin that is the preferred way.
 
-Another good example is that you can cherry-pick fixes from Epics mainline and push directly into your own `main`.
+One benefit with this setup, is that you can cherry-pick fixes from Epics mainline and push directly into your own `main`.
 Later, when the fix gets included in an official release your divergence should just resolve itself in the upgrade
 process.
 
