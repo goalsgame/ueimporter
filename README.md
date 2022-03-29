@@ -63,11 +63,11 @@ Once it knows it's just a question of replicating these exact changes
 in plastic.
 
 `ueimporter` is meant to be platform independent and could be used on
-Windows, macOs or Linux. These platforms disagree on how line endings is encoded
+Windows, macOs or Linux. These platforms disagree on how line endings are encoded
 in text files. The tool avoids the problem completely by not copying files
 directly from the git repo, rather it expects you to download the zip files
 that Epic publish for each engine release, and copies files from there.
-Release zips use LF line endings.
+Release zips seem to consistently use LF line endings.
 
 We also have file permissions to take into account, There are many
 shell scripts targeting Linux and macOs in Unreal Engine, these needs to be checked
@@ -157,7 +157,7 @@ $ pip uninstall ueimporter
 
 If you plan do do active development of `ueimporter` it's more convenient to
 install in editable/development mode. This way `pip` installs thin
-wrappers in it's registry that simply forwards all invocations to the code
+wrappers in its registry that simply forwards all invocations to the code
 in your git repository.
 
 Again, from your git repo root
