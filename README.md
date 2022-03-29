@@ -25,6 +25,9 @@ by replicating changes from the official
     1. [Debugging](#dev-debug)
     1. [Testing](#dev-test)
 
+1. [Contributions](#contributions)
+
+1. [License](#licence)
 
 ## Overview
 
@@ -319,3 +322,20 @@ $ pytest -q test_path_util.py
 ```
 
 Note that test coverage is not that high at the time of writing.
+
+## Contributions <a name="contributions" />
+We welcome contributions to this project. Please join [GOALS discord server](https://discord.gg/GOALS),
+head to `#contribute` under `GOALS/OPEN-SOURCE` and we'll try to help out.
+
+## License <a name="licence" />
+The ueimporter project is dual-licensed.
+
+* [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0).
+* [MIT license](https://opensource.org/licenses/MIT).
+
+As a user/licensee you choose which license to adhere to.
+
+### Contribution
+Unless you explicitly state otherwise, any contribution intentionally submitted
+for inclusion in the work by you, as defined in the Apache-2.0 license, shall
+be dual licensed as above, without any additional terms or conditions.
