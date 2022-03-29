@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(name='ueimporter',
-      version='0.1',
+      version='0.1.0',
       description='Imports Unreal Engine releases into plastic repository',
       url='http://github.com/goalsgame/tools-game-utils/ueimporter',
       author='Andreas Andersson',
