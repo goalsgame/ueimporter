@@ -25,6 +25,8 @@ by replicating changes from the official
     1. [Debugging](#dev-debug)
     1. [Testing](#dev-test)
 
+1. [Contributions](#contributions)
+
 1. [License](#licence)
 
 ## Overview
@@ -321,7 +323,7 @@ $ pytest -q test_path_util.py
 
 Note that test coverage is not that high at the time of writing.
 
-## Contributions
+## Contributions <a name="contributions" />
 We welcome contributions to this project. Please join [GOALS discord server](https://discord.gg/GOALS),
 head to `#contribute` under `GOALS/OPEN-SOURCE` and we'll try to help out.
 
