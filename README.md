@@ -270,13 +270,14 @@ Set to print what is about to happen without doing anything.
 Specifies the root of the UE Plastic workspace on disc.
 Default is current working directory (CWD).
 
+##### --ueimporter-json
+Name of file where last integrated UE version will be stored.
+Unless specified path is absolute it will be interpreted as relative to the plastic workspace root.
+Default is `.ueimporter.json`.
+
 ##### --from-release-tag
 Git tag of release currently used.
 Required whenever a `ueimporter.json` file does not exist.
-
-##### --ueimporter-json
-Name of file where last integrated UE version will be stored.
-Default is `.ueimporter.json`.
 
 ##### --log-file
 Name of log file where all output is saved.
