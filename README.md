@@ -71,8 +71,8 @@ directly from the Git repo, rather it expects you to download the zip files
 that Epic publish for each engine release, and copies files from there.
 Release zips seem to consistently use `LF` line endings.
 
-We also have file permissions to take into account, There are many
-shell scripts targeting Linux and macOs in Unreal Engine, these needs to be checked
+If you ever use macOs or Linux to develop your game, we also need to take file permissions
+into account. There are many shell scripts in Unreal Engine, these needs to be checked
 into Plastic with the `+x` flag set, or else non-windows users will have to manually
 `chmod +x` the script files before they can be used.
 This means that `ueimporter` **needs to be executed on Linux or macOs** so that
