@@ -181,9 +181,9 @@ $ pip install --user -e .
 #### 2. Fetch latest from Epics main Git repo
 
 For this example we assume that you have previously cloned [UnrealEngine](https://github.com/EpicGames/UnrealEngine) into
-`c:\github.com\UnrealEngine`
+`~/github.com/UnrealEngine`
 ```
-$ cd c:\github.com\UnrealEngine
+$ cd ~/github.com/UnrealEngine
 $ git fetch
 ```
 
@@ -195,7 +195,7 @@ with the upgrade process.
 #### 4. Download & extract release zip/tarball
 
 From [UnrealEngine/releases](https://github.com/EpicGames/UnrealEngine/releases)
-In this example we unpack all releases in a directory called `C:\Vendor\UnrealEngine`,
+In this example we unpack all releases in a directory called `~/vendor/UnrealEngine`,
 it is assumed to hold a subdirectory for each release named exactly like the Git release tag.
 
 #### 5. Run script with --pretend
@@ -203,10 +203,10 @@ it is assumed to hold a subdirectory for each release named exactly like the Git
 Here's an example that upgrade a UE vendor branch to `4.27.2`.
 ```
 ueimporter
- --git-repo-root="C:\github.com\UnrealEngine"
+ --git-repo-root="~/github.com/UnrealEngine"
  --to-release-tag="4.27.2-release"
- --zip-package-root="C:\Vendor\UnrealEngine"
- --plastic-workspace-root="C:\Plastic\YourGame"
+ --zip-package-root="~/vendor/UnrealEngine"
+ --plastic-workspace-root="~/wkspaces/YourGame"
  --pretend
 ```
 The `--pretend` argument makes the script simply log the files it will upgrade,
@@ -216,10 +216,10 @@ that 'ueimporter' will do what you expect.
 #### 6. Stop pretending, and run `ueimporter` for real
 ```
 ueimporter
- --git-repo-root="C:\github.com\UnrealEngine"
+ --git-repo-root="~/github.com/UnrealEngine"
  --to-release-tag="4.27.2-release"
- --zip-package-root="C:\Vendor\UnrealEngine"
- --plastic-workspace-root="C:\Plastic\YourGame"
+ --zip-package-root="~/vendor/UnrealEngine"
+ --plastic-workspace-root="~/wkspaces/YourGame"
 ```
 
 This might take a while, hours even on a fast machine. The slow part is communicating with
@@ -307,7 +307,7 @@ Make sure to install `ueimporter` in dev mode, as described [above](#install-dev
 To debug you can use pythons built in `pdb` module
 
 ```
-$ python -m pdb ueimporter\main.py $(YOUR_OPTIONS)
+$ python -m pdb ueimporter/main.py $(YOUR_OPTIONS)
 ```
 
 Describing how to use `pdb` is out of scope, for starters try the `help` command.
