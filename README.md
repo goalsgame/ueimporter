@@ -2,9 +2,9 @@
 
 `ueimporter` is a command line tool that imports
 [Unreal Engine](https://www.unrealengine.com) source code releases
-into a [plastic scm](https://www.plasticscm.com) repo,
+into a [Plastic scm](https://www.plasticscm.com) repo,
 by replicating changes from the official
-[UnrealEngine git repo](https://github.com/EpicGames/UnrealEngine).
+[UnrealEngine GitHub repo](https://github.com/EpicGames/UnrealEngine).
 
 ## Table of Contents
 1. [Overview](#overview)
@@ -31,7 +31,7 @@ by replicating changes from the official
 
 ## Overview
 
-`ueimporter` is useful for plastic version control users, that wants to
+`ueimporter` is useful for Plastic version control users, that wants to
 build a game using Unreal Engine, and plan to make changes to the engine code
 itself, while also upgrading engine releases as they are released by Epic.
 
@@ -43,38 +43,38 @@ branch where you do your active development.
 the vanilla engine for new releases.
 
 A naive strategy would be to delete all files on the vendor branch simply
-copy all files from the new release, and let plastic detect which files have
+copy all files from the new release, and let Plastic detect which files have
 been added, removed, modified or moved.
 
-It sounds like it should work, but the move detection in plastic seem to miss
+It sounds like it should work, but the move detection in Plastic seem to miss
 most moves, at least when there are as many files involved as there are in an
-unreal engine upgrade (`4.27.2` -> `5.0.0-early-access-1` modifies over 50k files).
+Unreal Engine upgrade (`4.27.2` -> `5.0.0-early-access-1` modifies over 50k files).
 For a moved file you will end up with a delete followed by an add. If you have
 made changes to the file in the old location on your main-branch you will miss
 these when you merge down the new UE release from the vendor branch.
-If plastic would know that a file was in fact moved it would be able to merge
+If Plastic would know that a file was in fact moved it would be able to merge
 your changes into the new location.
 
 This move file problem is the main reason `ueimporter` exist, and to solve it
-it uses information from the git repo that knows how and where a file was moved.
-It simply asks git `git diff --name-status <from-release-tag> <to-release-tag>`
+it uses information from the Git repo that knows how and where a file was moved.
+It simply asks Git `git diff --name-status <from-release-tag> <to-release-tag>`
 and we get a list of exactly which files was added, removed, modified or moved.
 Once it knows it's just a question of replicating these exact changes
-in plastic.
+in Plastic.
 
 `ueimporter` is meant to be platform independent and could be used on
 Windows, macOs or Linux. These platforms disagree on how line endings are encoded
 in text files. The tool avoids the problem completely by not copying files
-directly from the git repo, rather it expects you to download the zip files
+directly from the Git repo, rather it expects you to download the zip files
 that Epic publish for each engine release, and copies files from there.
 Release zips seem to consistently use `LF` line endings.
 
 We also have file permissions to take into account, There are many
 shell scripts targeting Linux and macOs in Unreal Engine, these needs to be checked
-into plastic with the `+x` flag set, or else non-windows users will have to manually
+into Plastic with the `+x` flag set, or else non-windows users will have to manually
 `chmod +x` the script files before they can be used.
 This means that `ueimporter` **needs to be executed on Linux or macOs** so that
-plastic has a chance to read file permission flags from the file system when files
+Plastic has a chance to read file permission flags from the file system when files
 are checked in.
 
 # Suggested branch layout <a name="branch-layout" />
@@ -93,7 +93,7 @@ From the very first changeset (where no files exist) we create the `vendor-unrea
 and the first changeset to it is a simple copy paste of the all files found in
 [4.27.0-release.tar.gz](https://github.com/EpicGames/UnrealEngine/releases/tag/4.27.0-release).
 Make sure to add and check in files on either macOs or Linux or else file permission flags
-such as (+x) will not be recorded in plastic.
+such as (+x) will not be recorded in Plastic.
 
 Next step is to add this to `main`, let's use a task branch called `add-ue-4.27.0`.
 Before we merge the result back we remove the `Samples` and `Templates` directories from the
@@ -103,9 +103,9 @@ On main we do another local change to the engines source code, labeled as `local
 
 When we are ready to upgrade to `4.27.1` we switch back to `vendor-unreal-engine`, download
 [4.27.1-release.tar.gz](https://github.com/EpicGames/UnrealEngine/releases/tag/4.27.1-release),
-clone/fetch the main [UnrealEngine git repo](https://github.com/EpicGames/UnrealEngine) and use
-`ueimporter` to replicate all changes to your plastic workspace. Review the result
-in plastics UI and check in the result. See [Usage](#usage) for a more detailed description.
+clone/fetch the main [UnrealEngine GitHub repo](https://github.com/EpicGames/UnrealEngine) and use
+`ueimporter` to replicate all changes to your Plastic workspace. Review the result
+in Plastics UI and check in the result. See [Usage](#usage) for a more detailed description.
 
 Now, we create a branch called `upgrade-ue-4.27.1`, and we merge with the `4.27.1` release
 we just imported. Solving any conflicts that local change `#1` or `#2` might have caused.
@@ -128,7 +128,7 @@ before we publish it to `main`.
 #### * Plastic CLI
 A [Plastics](https://www.plasticscm.com) CLI tool `cm` needs to be present in `PATH`.
 
-#### * Clone of the [UnrealEngine git repo](https://github.com/EpicGames/UnrealEngine)
+#### * Clone of the [UnrealEngine GitHub repo](https://github.com/EpicGames/UnrealEngine)
 Your github user will need to be a registered unreal developer to get access.
 See [How do I access Unreal Engine 4 C++ source code via GitHub?](https://www.unrealengine.com/en-US/ue4-on-github)
 
@@ -137,12 +137,12 @@ You can find zips/tarballs for all UE releases under [UnrealEngine/releases](htt
 
 ## Installation <a name="install" />
 
-Install a snapshot of `ueimporter` using `pip`, from the git repo root
+Install a snapshot of `ueimporter` using `pip`, from the Git repo root
 ```
 $ pip install --user .
 ```
 This enables you to invoke `ueimporter` from any directory (such as the target
-plastic repo root)
+Plastic repo root)
 
 Each time you want to upgrade `ueimporter` you simply pull down the latest code
 and run the command again.
@@ -158,9 +158,9 @@ $ pip uninstall ueimporter
 If you plan do do active development of `ueimporter` it's more convenient to
 install in editable/development mode. This way `pip` installs thin
 wrappers in its registry that simply forwards all invocations to the code
-in your git repository.
+in your Git repository.
 
-Again, from your git repo root
+Again, from your Git repo root
 ```
 $ pip install --user -e .
 ```
@@ -169,9 +169,9 @@ $ pip install --user -e .
 
 ### Step by step guide <a name="usage-guide" />
 
-#### 1. Switch to the lastest changeset on plastics vendor branch
+#### 1. Switch to the lastest changeset on Plastics vendor branch
 
-#### 2. Fetch latest from Epics main git repo
+#### 2. Fetch latest from Epics main Git repo
 
 For this example we assume that you have previously cloned [UnrealEngine](https://github.com/EpicGames/UnrealEngine) into
 `c:\github.com\UnrealEngine`
@@ -189,7 +189,7 @@ with the upgrade process.
 
 From [UnrealEngine/releases](https://github.com/EpicGames/UnrealEngine/releases)
 In this example we unpack all releases in a directory called `C:\Vendor\UnrealEngine`,
-it is assumed to hold a subdirectory for each release named exactly like the git release tag.
+it is assumed to hold a subdirectory for each release named exactly like the Git release tag.
 
 #### 5. Run script with --pretend
 
@@ -216,18 +216,18 @@ ueimporter
 ```
 
 This might take a while, hours even on a fast machine. The slow part is communicating with
-plastics CLI tool `cm` to add/delete/check out or move files and directories.
+Plastics CLI tool `cm` to add/delete/check out or move files and directories.
 For me it took over 7 hours to import the 100k changes that differentiates `5.0.0-preview-1` from `5.0.0-early-access-2`
 
 
 #### 7. Verify that directory structure is identical to the release zip
 To make sure that `ueimporter` has not missed anything it can be a good idea to
-compare the plastic workspace directory is now identical to the release zip
+compare the Plastic workspace directory is now identical to the release zip
 file.
 
 There are several tools for this, [Beyond Compare](https://www.scootersoftware.com) is a one, [WinMerge](https://winmerge.org/) another free alternative.
 
-#### 8. Check in all changes into plastic
+#### 8. Check in all changes into Plastic
 There is no need to compile and test anything, remember that the vendor branch simply contains
 unmodified versions of UnrealEngine. Any building and testing happens later, when you merge
 the new release with your `main` branch.
@@ -241,7 +241,7 @@ is out of scope for this guide.
 #### Required arguments <a name="usage-args-required" />
 
 ##### --git-repo-root
-Specifies the root of the UE git repo on disc. Create this directory with
+Specifies the root of the UE Git repo on disc. Create this directory with
 ```
 $ git clone git@github.com:EpicGames/UnrealEngine.git
 ```
@@ -260,7 +260,7 @@ Zip files can be downloaded from [EpicGames/UnrealEngine/releases](https://githu
 Set to print what is about to happen without doing anything.
 
 ##### --plastic-workspace-root
-Specifies the root of the UE plastic workspace on disc.
+Specifies the root of the UE Plastic workspace on disc.
 Default is current working directory (CWD).
 
 ##### --from-release-tag
@@ -290,7 +290,7 @@ Available log levels
 Skip operations that will fail when executed. Equivalent to choosing `skip-all` in the interactive prompt.
 
 ##### --git-command-cache
-If set, results of heavy git commands will be stored in this directory.
+If set, results of heavy Git commands will be stored in this directory.
 
 ## Development <a name="dev" />
 
