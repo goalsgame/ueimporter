@@ -127,13 +127,16 @@ before we publish it to `main`.
 
 #### * Python 3.10+
 
+You also need `pip`, which comes included in most Python distributions these days. See [pips documentation](https://pip.pypa.io/en/stable/installation/) for more info.
+
 #### * Git
+`ueimporter` needs to be executed from an environment where `git` is present in `PATH`.
 
 #### * Plastic CLI
-A [Plastics](https://www.plasticscm.com) CLI tool `cm` needs to be present in `PATH`.
+[Plastics ](https://www.plasticscm.com) CLI tool `cm` also needs to be present in `PATH`.
 
 #### * Clone of the [UnrealEngine GitHub repo](https://github.com/EpicGames/UnrealEngine)
-Your github user will need to be a registered unreal developer to get access.
+Your github user will need to be a registered Unreal Developer to get access.
 See [How do I access Unreal Engine 4 C++ source code via GitHub?](https://www.unrealengine.com/en-US/ue4-on-github)
 
 #### * Release zip for the UE release you want to import.
