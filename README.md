@@ -339,8 +339,10 @@ $ pytest -q test_path_util.py
 Note that test coverage is not that high at the time of writing.
 
 ## Contributions <a name="contributions" />
-We welcome contributions to this project. Please join [GOALS discord server](https://discord.gg/GOALS),
-head to `#contribute` under `GOALS/OPEN-SOURCE` and we'll try to help out.
+We welcome contributions to this project. Just fork the repo, make your changes
+and submit a pull request and we'll get back to you. For more detailed instructions
+head on over to GitHubs [Fork a repo](https://docs.github.com/en/get-started/quickstart/fork-a-repo])
+docs.
 
 ## License <a name="licence" />
 The ueimporter project is dual-licensed.
