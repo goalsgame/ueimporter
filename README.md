@@ -211,7 +211,7 @@ $ ueimporter
 ```
 The `--pretend` argument makes the script simply log the files it will upgrade,
 without actually doing it. Remove this parameter once you feel confident
-that 'ueimporter' will do what you expect.
+that `ueimporter` will do what you expect.
 
 #### 6. Stop pretending, and run `ueimporter` for real
 ```sh
@@ -224,20 +224,28 @@ $ ueimporter
 
 This might take a while, hours even on a fast machine. The slow part is communicating with
 Plastics CLI tool `cm` to add/delete/check out or move files and directories.
-For me it took over 7 hours to import the 100k changes that differentiates `5.0.0-preview-1` from `5.0.0-early-access-2`
-
+For me it took over 7 hours to import the 100k changes that differentiates `5.0.0-preview-1` from `5.0.0-early-access-2`.
 
 #### 7. Verify that directory structure is identical to the release zip
 To make sure that `ueimporter` has not missed anything it can be a good idea to
 compare the Plastic workspace directory is now identical to the release zip
 file.
 
-There are several tools for this, [Beyond Compare](https://www.scootersoftware.com) is a one, [WinMerge](https://winmerge.org/) another free alternative.
+There are several tools for this.
+
+On Linux and Mac you can use the stock `diff` command line utility.
+
+```sh
+$ diff -qr ~/wkspaces/YourGame ~/vendor/UnrealEngine/4.27.2-release
+```
+
+On Windows there is no shortage of options. [WinMerge](https://winmerge.org/) is one free alternative and
+another great one that you have to pay for is [Beyond Compare](https://www.scootersoftware.com).
 
 #### 8. Check in all changes into Plastic
-There is no need to compile and test anything, remember that the vendor branch simply contains
-unmodified versions of UnrealEngine. Any building and testing happens later, when you merge
-the new release with your `main` branch.
+There is no need to compile and test anything. Remember that the vendor branch simply contains
+unmodified versions of UnrealEngine, if the files and folders are identical that's good enough.
+Any building and testing happens later, when you merge the new release with your `main` branch.
 
 #### 9. Rejoice
 Now you have a smoking fresh engine release. Next step is to merge it into your development branch (`main`). That
