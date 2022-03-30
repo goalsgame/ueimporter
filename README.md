@@ -89,19 +89,21 @@ there is a couple of task branches called `upgrade-ue-4.27.1` and `upgrade-ue-4.
 used as a staging area for updating `main` with corresponding engine releases.
 
 In this example, the first changesets on `main` contains change unrelated to Unreal Engine,
-in fact after the second changeset there is not a single file from the engine present.
+the same goes for the second changeset, after which there is not a single file from the
+engine present.
 
-From the very first changeset (where no files exist) we create the `vendor-unreal-engine` branch,
+From the very first changeset (where no engine files exist) we create the `vendor-unreal-engine` branch,
 and the first changeset to it is a simple copy paste of the all files found in
 [4.27.0-release.tar.gz](https://github.com/EpicGames/UnrealEngine/releases/tag/4.27.0-release).
 Make sure to add and check in files on either macOs or Linux or else file permission flags
-such as (+x) will not be recorded in Plastic.
+(`+x`) will not be recorded in Plastic.
 
 Next step is to add this to `main`, let's use a task branch called `add-ue-4.27.0`.
 Before we merge the result back we remove the `Samples` and `Templates` directories from the
 root, we do not need them on `main`, this is labeled as `local UE change #1`.
 
 On main we do another local change to the engines source code, labeled as `local UE change #2`.
+There might be other changesets here, for example adding your main game module.
 
 When we are ready to upgrade to `4.27.1` we switch back to `vendor-unreal-engine`, download
 [4.27.1-release.tar.gz](https://github.com/EpicGames/UnrealEngine/releases/tag/4.27.1-release),
