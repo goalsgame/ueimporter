@@ -49,9 +49,11 @@ been added, removed, modified or moved.
 It sounds like it should work, but the move detection in Plastic seem to miss
 most moves, at least when there are as many files involved as there are in an
 Unreal Engine upgrade (`4.27.2` -> `5.0.0-early-access-1` modifies over 50k files).
-For a moved file you will end up with a delete followed by an add. If you have
-made changes to the file in the old location on your main-branch you will miss
-these when you merge down the new UE release from the vendor branch.
+For a moved file you will instead end up with a delete followed by an add.
+If you have made changes to the file in the old location on your main-branch,
+Plastic will not help you merge these changes into the file in its new location.
+Instead, it will ask you how to resolve your changes to the old, deleted file.
+Forcing you to manually copy your changes into the new location.
 If Plastic would know that a file was in fact moved it would be able to merge
 your changes into the new location.
 
