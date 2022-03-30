@@ -67,7 +67,7 @@ in Plastic.
 `ueimporter` is meant to be platform independent and could be used on
 Windows, macOs or Linux. These platforms disagree on how line endings are encoded
 in text files. The tool avoids the problem completely by not copying files
-directly from the Git repo, rather it expects you to download the zip files
+directly from the checked out Git repo, rather it expects you to download the zip files
 that Epic publish for each engine release, and copies files from there.
 Release zips seem to consistently use `LF` line endings.
 
