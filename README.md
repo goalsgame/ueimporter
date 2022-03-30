@@ -204,9 +204,9 @@ Here's an example that upgrade a UE vendor branch to `4.27.2`.
 ```
 ueimporter
  --git-repo-root="~/github.com/UnrealEngine"
- --to-release-tag="4.27.2-release"
  --zip-package-root="~/vendor/UnrealEngine"
  --plastic-workspace-root="~/wkspaces/YourGame"
+ --to-release-tag="4.27.2-release"
  --pretend
 ```
 The `--pretend` argument makes the script simply log the files it will upgrade,
@@ -217,9 +217,9 @@ that 'ueimporter' will do what you expect.
 ```
 ueimporter
  --git-repo-root="~/github.com/UnrealEngine"
- --to-release-tag="4.27.2-release"
  --zip-package-root="~/vendor/UnrealEngine"
  --plastic-workspace-root="~/wkspaces/YourGame"
+ --to-release-tag="4.27.2-release"
 ```
 
 This might take a while, hours even on a fast machine. The slow part is communicating with
@@ -253,13 +253,13 @@ Specifies the root of the UE Git repo on disc. Create this directory with
 $ git clone git@github.com:EpicGames/UnrealEngine.git
 ```
 
-##### --to-release-tag
-Git tag of release to upgrade to.
-Tags is listed here [EpicGames/UnrealEngine/tags](https://github.com/EpicGames/UnrealEngine/tags)
-
 ##### --zip-package-root
 Specifies where release zip files have been extracted.
 Zip files can be downloaded from [EpicGames/UnrealEngine/releases](https://github.com/EpicGames/UnrealEngine/releases)
+
+##### --to-release-tag
+Git tag of release to upgrade to.
+Tags is listed here [EpicGames/UnrealEngine/tags](https://github.com/EpicGames/UnrealEngine/tags)
 
 #### Optional arguments <a name="usage-args-optional" />
 
