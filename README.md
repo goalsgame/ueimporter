@@ -145,7 +145,7 @@ You can find zips/tarballs for all UE releases under [UnrealEngine/releases](htt
 ## Installation <a name="install" />
 
 Install a snapshot of `ueimporter` using `pip`, from the Git repo root
-```
+```sh
 $ pip install --user .
 ```
 This enables you to invoke `ueimporter` from any directory (such as the target
@@ -156,7 +156,7 @@ and run the command again.
 
 ### Uninstall <a name="install-uninstall" />
 To uninstall you simply call pip, can be invoked from anywhere:
-```
+```sh
 $ pip uninstall ueimporter
 ```
 
@@ -168,7 +168,7 @@ wrappers in its registry that simply forwards all invocations to the code
 in your Git repository.
 
 Again, from your Git repo root
-```
+```sh
 $ pip install --user -e .
 ```
 
@@ -182,7 +182,7 @@ $ pip install --user -e .
 
 For this example we assume that you have previously cloned [UnrealEngine](https://github.com/EpicGames/UnrealEngine) into
 `~/github.com/UnrealEngine`
-```
+```sh
 $ cd ~/github.com/UnrealEngine
 $ git fetch
 ```
@@ -201,25 +201,25 @@ it is assumed to hold a subdirectory for each release named exactly like the Git
 #### 5. Run script with --pretend
 
 Here's an example that upgrade a UE vendor branch to `4.27.2`.
-```
-ueimporter
- --git-repo-root="~/github.com/UnrealEngine"
- --zip-package-root="~/vendor/UnrealEngine"
- --plastic-workspace-root="~/wkspaces/YourGame"
- --to-release-tag="4.27.2-release"
- --pretend
+```sh
+$ ueimporter
+  --git-repo-root="~/github.com/UnrealEngine"
+  --zip-package-root="~/vendor/UnrealEngine"
+  --plastic-workspace-root="~/wkspaces/YourGame"
+  --to-release-tag="4.27.2-release"
+  --pretend
 ```
 The `--pretend` argument makes the script simply log the files it will upgrade,
 without actually doing it. Remove this parameter once you feel confident
 that 'ueimporter' will do what you expect.
 
 #### 6. Stop pretending, and run `ueimporter` for real
-```
-ueimporter
- --git-repo-root="~/github.com/UnrealEngine"
- --zip-package-root="~/vendor/UnrealEngine"
- --plastic-workspace-root="~/wkspaces/YourGame"
- --to-release-tag="4.27.2-release"
+```sh
+$ ueimporter
+  --git-repo-root="~/github.com/UnrealEngine"
+  --zip-package-root="~/vendor/UnrealEngine"
+  --plastic-workspace-root="~/wkspaces/YourGame"
+  --to-release-tag="4.27.2-release"
 ```
 
 This might take a while, hours even on a fast machine. The slow part is communicating with
@@ -249,7 +249,7 @@ is out of scope for this guide.
 
 ##### --git-repo-root
 Specifies the root of the UE Git repo on disc. Create this directory with
-```
+```sh
 $ git clone git@github.com:EpicGames/UnrealEngine.git
 ```
 
@@ -307,7 +307,7 @@ Make sure to install `ueimporter` in dev mode, as described [above](#install-dev
 ### Debugging <a name="dev-debug" />
 To debug you can use pythons built in `pdb` module
 
-```
+```sh
 $ python -m pdb ueimporter/main.py $(YOUR_OPTIONS)
 ```
 
@@ -320,13 +320,12 @@ For more info see the module documentation: [pdb — The Python Debugger](https:
 automatically installed when you install `ueimporter` with `pip`.
 
 It's simple to use, again from the repo root:
-```
+```sh
 # Run all tests
 $ pytest
 
 # Run a specific test-file (tests/test_path_util.py)
 $ pytest -q test_path_util.py
-
 ```
 
 Note that test coverage is not that high at the time of writing.
