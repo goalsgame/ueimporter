@@ -48,7 +48,7 @@ been added, removed, modified or moved.
 
 It sounds like it should work, but the move detection in plastic seem to miss
 most moves, at least when there are as many files involved as there are in an
-unreal engine upgrade (4.27.2 -> 5.0.0-early-access-1 modifies over 50k files).
+unreal engine upgrade (`4.27.2` -> `5.0.0-early-access-1` modifies over 50k files).
 For a moved file you will end up with a delete followed by an add. If you have
 made changes to the file in the old location on your main-branch you will miss
 these when you merge down the new UE release from the vendor branch.
@@ -67,7 +67,7 @@ Windows, macOs or Linux. These platforms disagree on how line endings are encode
 in text files. The tool avoids the problem completely by not copying files
 directly from the git repo, rather it expects you to download the zip files
 that Epic publish for each engine release, and copies files from there.
-Release zips seem to consistently use LF line endings.
+Release zips seem to consistently use `LF` line endings.
 
 We also have file permissions to take into account, There are many
 shell scripts targeting Linux and macOs in Unreal Engine, these needs to be checked
