@@ -1,6 +1,6 @@
 # UEIMPORTER
 
-`ueimporter` is a command line tool that imports
+UEIMPORTER is a command line tool that imports
 [Unreal Engine](https://www.unrealengine.com) source code releases
 into a [Plastic scm](https://www.plasticscm.com) repo,
 by replicating changes from the official
@@ -31,7 +31,7 @@ by replicating changes from the official
 
 ## Overview
 
-`ueimporter` is useful for Plastic version control users, that wants to
+UEIMPORTER is useful for Plastic version control users, that wants to
 build a game using Unreal Engine, and plan to make changes to the engine code
 itself, while also upgrading engine releases as they are released by Epic.
 
@@ -39,7 +39,7 @@ The idea is to see Unreal Engine as a third party vendor lib (albeit a really
 big library). An established strategy for vendor libs is to keep a clean and
 unmodified copy of the lib in a separate branch, that you merge into the
 branch where you do your active development.
-`ueimporter` helps create such a vendor branch, and keep it updated with
+UEIMPORTER helps create such a vendor branch, and keep it updated with
 the vanilla engine for new releases.
 
 A naive strategy would be to delete all files on the vendor branch simply
@@ -57,14 +57,14 @@ Forcing you to manually copy your changes into the new location.
 If Plastic would know that a file was in fact moved it would be able to merge
 your changes into the new location.
 
-This move file problem is the main reason `ueimporter` exist, and to solve it
+This move file problem is the main reason UEIMPORTER exist, and to solve it
 it uses information from the Git repo that knows how and where a file was moved.
 It simply asks Git `git diff --name-status <from-release-tag> <to-release-tag>`
 and we get a list of exactly which files was added, removed, modified or moved.
 Once it knows it's just a question of replicating these exact changes
 in Plastic.
 
-`ueimporter` is meant to be platform independent and could be used on
+UEIMPORTER is meant to be platform independent and could be used on
 Windows, macOs or Linux. These platforms disagree on how line endings are encoded
 in text files. The tool avoids the problem completely by not copying files
 directly from the checked out Git repo, rather it expects you to download the zip files
@@ -75,7 +75,7 @@ If you ever use macOs or Linux to develop your game, we also need to take file p
 into account. There are many shell scripts in Unreal Engine, these needs to be checked
 into Plastic with the `+x` flag set, or else non-windows users will have to manually
 `chmod +x` the script files before they can be used.
-This means that `ueimporter` **needs to be executed on Linux or macOs** so that
+This means that UEIMPORTER **needs to be executed on Linux or macOs** so that
 Plastic has a chance to read file permission flags from the file system when files
 are checked in.
 
@@ -108,7 +108,7 @@ There might be other changesets here, for example adding your main game module.
 When we are ready to upgrade to `4.27.1` we switch back to `vendor-unreal-engine`, download
 [4.27.1-release.tar.gz](https://github.com/EpicGames/UnrealEngine/releases/tag/4.27.1-release),
 clone/fetch the main [UnrealEngine GitHub repo](https://github.com/EpicGames/UnrealEngine) and use
-`ueimporter` to replicate all changes to your Plastic workspace. Review the result
+UEIMPORTER to replicate all changes to your Plastic workspace. Review the result
 in Plastics UI and check in the result. See [Usage](#usage) for a more detailed description.
 
 Now, we create a branch called `upgrade-ue-4.27.1`, and we merge with the `4.27.1` release
@@ -119,7 +119,7 @@ The result is merged back to `main` and we can continue developing our game.
 Once again, we can make changes to engine code, such as local change `#4`
 
 Whenever it's time to upgrade we rince and repeat the same process;
-First we import changes using `ueimporter`, then merge with main on a task branch
+First we import changes using UEIMPORTER, then merge with main on a task branch
 before we publish it to `main`.
 
 
@@ -130,7 +130,7 @@ before we publish it to `main`.
 You also need `pip`, which comes included in most Python distributions these days. See [pips documentation](https://pip.pypa.io/en/stable/installation/) for more info.
 
 #### * Git
-`ueimporter` needs to be executed from an environment where `git` is present in `PATH`.
+UEIMPORTER needs to be executed from an environment where `git` is present in `PATH`.
 
 #### * Plastic CLI
 [Plastics ](https://www.plasticscm.com) CLI tool `cm` also needs to be present in `PATH`.
@@ -144,14 +144,14 @@ You can find zips/tarballs for all UE releases under [UnrealEngine/releases](htt
 
 ## Installation <a name="install" />
 
-Install a snapshot of `ueimporter` using `pip`, from the Git repo root
+Install a snapshot of UEIMPORTER using `pip`, from the Git repo root
 ```sh
 $ pip install --user .
 ```
 This enables you to invoke `ueimporter` from any directory (such as the target
 Plastic repo root)
 
-Each time you want to upgrade `ueimporter` you simply pull down the latest code
+Each time you want to upgrade UEIMPORTER you simply pull down the latest code
 and run the command again.
 
 ### Uninstall <a name="install-uninstall" />
@@ -162,7 +162,7 @@ $ pip uninstall ueimporter
 
 ### Development mode <a name="install-dev-mode" />
 
-If you plan do do active development of `ueimporter` it's more convenient to
+If you plan do do active development of UEIMPORTER it's more convenient to
 install in editable/development mode. This way `pip` installs thin
 wrappers in its registry that simply forwards all invocations to the code
 in your Git repository.
@@ -211,9 +211,9 @@ $ ueimporter
 ```
 The `--pretend` argument makes the script simply log the files it will upgrade,
 without actually doing it. Remove this parameter once you feel confident
-that `ueimporter` will do what you expect.
+that UEIMPORTER will do what you expect.
 
-#### 6. Stop pretending, and run `ueimporter` for real
+#### 6. Stop pretending, and run UEIMPORTER for real
 ```sh
 $ ueimporter
   --git-repo-root="~/github.com/UnrealEngine"
@@ -227,7 +227,7 @@ Plastics CLI tool `cm` to add/delete/check out or move files and directories.
 For me it took over 7 hours to import the 100k changes that differentiates `5.0.0-preview-1` from `5.0.0-early-access-2`.
 
 #### 7. Verify that directory structure is identical to the release zip
-To make sure that `ueimporter` has not missed anything it can be a good idea to
+To make sure that UEIMPORTER has not missed anything it can be a good idea to
 compare the Plastic workspace directory is now identical to the release zip
 file.
 
@@ -310,7 +310,7 @@ If set, results of heavy Git commands will be stored in this directory.
 
 ## Development <a name="dev" />
 
-Make sure to install `ueimporter` in dev mode, as described [above](#install-dev-mode).
+Make sure to install UEIMPORTER in dev mode, as described [above](#install-dev-mode).
 
 ### Debugging <a name="dev-debug" />
 To debug you can use pythons built in `pdb` module
@@ -324,8 +324,8 @@ For more info see the module documentation: [pdb — The Python Debugger](https:
 
 ### Testing <a name="dev-test" />
 
-`ueimporter` use [pytest](https://docs.pytest.org) to run unit tests, it's
-automatically installed when you install `ueimporter` with `pip`.
+UEIMPORTER use [pytest](https://docs.pytest.org) to run unit tests, it's
+automatically installed when you install it with `pip`.
 
 It's simple to use, again from the repo root:
 ```sh
