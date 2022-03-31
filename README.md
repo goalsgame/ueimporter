@@ -1,4 +1,4 @@
-# ueimporter
+# UEIMPORTER
 
 `ueimporter` is a command line tool that imports
 [Unreal Engine](https://www.unrealengine.com) source code releases
