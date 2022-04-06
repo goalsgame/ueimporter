@@ -236,7 +236,7 @@ There are several tools for this.
 On Linux and Mac you can use the stock `diff` command line utility.
 
 ```sh
-$ diff -qr ~/wkspaces/YourGame ~/vendor/UnrealEngine/4.27.2-release
+$ diff -qr ~/wkspaces/YourGame ~/vendor/UnrealEngine/UnrealEngine-4.27.2-release
 ```
 
 On Windows there is no shortage of options. [WinMerge](https://winmerge.org/) is one free alternative and
