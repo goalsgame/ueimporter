@@ -237,7 +237,7 @@ def create_config(args, logger):
     if not source_release_zip_path.is_dir():
         logger.log_error(
             f'Error: Failed to find release zip package'
-            ' {source_release_zip_path}')
+            f' {source_release_zip_path}')
         sys.exit(1)
 
     return Config(git_repo,
