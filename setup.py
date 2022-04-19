@@ -19,5 +19,5 @@ setup(name='ueimporter',
       },
       setup_requires=['pytest-runner'],
       tests_require=['pytest'],
-      python_requires='>=3.10.0',
+      python_requires='>=3.9.0',
       )
