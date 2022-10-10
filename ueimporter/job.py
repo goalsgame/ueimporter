@@ -194,14 +194,16 @@ class Job:
 
         plastic_workspace_root = self.plastic_repo.workspace_root
 
-        def is_dir_empty(p):
+        def is_existing_dir_empty(p):
             workspace_path = plastic_workspace_root.joinpath(p)
+            if not workspace_path.exists():
+                return False
             for _ in workspace_path.iterdir():
                 return False
             return workspace_path.is_dir()
 
         while len(parents) > 0:
-            empty_parents = [p for p in parents if is_dir_empty(p)]
+            empty_parents = [p for p in parents if is_existing_dir_empty(p)]
             if len(empty_parents) == 0:
                 break
 
