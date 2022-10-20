@@ -103,9 +103,9 @@ def read_change_jobs(config, logger):
     try:
         logger.log('Resolving git hashes of release tags')
         logger.indent()
-        from_git_hash = config.git_repo.rev_parse(
+        from_git_hash = config.git_repo.rev_list(
             config.from_release_tag, logger)
-        to_git_hash = config.git_repo.rev_parse(config.to_release_tag, logger)
+        to_git_hash = config.git_repo.rev_list(config.to_release_tag, logger)
         logger.log(f'{config.from_release_tag} <=> {from_git_hash}')
         logger.log(f'{config.to_release_tag} <=> {to_git_hash}')
         logger.deindent()
@@ -217,12 +217,12 @@ def create_config(args, logger):
             f'Error: Please specify a git release tag with --to-release-tag')
         sys.exit(1)
 
-    if not git_repo.rev_parse(from_release_tag, logger):
+    if not git_repo.rev_list(from_release_tag, logger):
         logger.log_error(
             f'Error: Failed to find release tag named {from_release_tag}')
         sys.exit(1)
 
-    if not git_repo.rev_parse(args.to_release_tag, logger):
+    if not git_repo.rev_list(args.to_release_tag, logger):
         logger.log_error(
             f'Error: Failed to find release tag named {args.to_release_tag}')
         sys.exit(1)
