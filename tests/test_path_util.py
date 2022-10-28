@@ -176,3 +176,43 @@ def test_path_mock_parents():
     assert str(part1) == 'c:\\part1'
     assert str(part2) == 'c:\\part1\\part2'
     assert str(path_mock) == 'c:\\part1\\part2\\part3\\leaf.txt'
+
+
+def test_to_path_with_case_matching_disk():
+    path = 'c:\\part1\\part2\\part3\\leaf.txt'
+    disk_path = 'c:\\PART1\\part2\\PART3\\leaf.txt'
+    path_mock = PathMock.create(path)
+    disk_path_mock = PathMock.create(disk_path)
+    path_mock.disk_path = disk_path_mock
+
+    assert str(path_util.to_path_with_case_matching_disk(path_mock)) \
+        == disk_path
+
+
+def test_get_case_of_child_on_disk():
+    path = PathMock.create('c:\\CMakeModules\\Linux')
+    disk_path = PathMock.create('c:\\CMakeModules\\linux')
+    path.disk_path = disk_path
+
+    # Mock children existing on disk (returned by parent.iterdir())
+    assert path_util.get_case_of_child_on_disk(path.parent, 'Linux') == 'linux'
+    assert path_util.get_case_of_child_on_disk(path.parent, 'unix') == ''
+
+
+def test_find_parent_dirs_where_case_mismatch_disk():
+    root_dir = PathMock.create('c:\\root')
+    disk_root_dir = PathMock.create('c:\\ROOT')
+    root_dir.disk_path = disk_root_dir
+    path = PathMock.create('part1\\part2\\part3\\leaf.txt')
+    disk_path = PathMock.create('PART1\\part2\\PART3\\leaf.txt')
+    path.disk_path = disk_path
+
+    mismatches = path_util.find_parent_dirs_where_case_mismatch_disk(
+        path, root_dir)
+    assert len(mismatches) == 2, \
+        f'Expected 2 case mismatching parents'\
+        f', found {len(mismatches)}'
+    assert str(mismatches[0][0]) == 'part1'
+    assert str(mismatches[0][1]) == 'PART1'
+    assert str(mismatches[1][0]) == 'part1\\part2\\part3'
+    assert str(mismatches[1][1]) == 'PART1\\part2\\PART3'
