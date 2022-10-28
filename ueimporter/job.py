@@ -21,14 +21,15 @@ def create_jobs(changes, plastic_repo, source_root_path, pretend, logger):
 
         for i in range(0, len(per_file_changes) - 1):
             change = per_file_changes[i]
-            next_change = per_file_changes[i+1]
-            if type(change) != git.Delete or type(next_change) != git.Add:
+            if not change:
                 continue
 
-            logger.log('Replacing Del + Add with Move')
-            per_file_changes[i] = git.Move(change.filename,
-                                           next_change.filename)
-            per_file_changes[i + 1] = None
+            next_change = per_file_changes[i+1]
+            if type(change) == git.Delete and type(next_change) == git.Add:
+                logger.log('Replacing Del + Add with Move')
+                per_file_changes[i] = git.Move(change.filename,
+                                               next_change.filename)
+                per_file_changes[i + 1] = None
 
         all_per_file_changes += [c for c in per_file_changes if c]
         logger.deindent()
