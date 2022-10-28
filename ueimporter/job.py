@@ -8,23 +8,6 @@ import ueimporter.path_util as path_util
 
 
 def create_jobs(changes, plastic_repo, source_root_path, pretend, logger):
-    jobs = []
-    job_class_to_changes = [
-        (AddJob, changes.adds),
-        (DeleteJob, changes.deletes),
-        (ModifyJob, changes.modifications),
-        (MoveJob, changes.moves)]
-    for (job_class, job_changes) in job_class_to_changes:
-        if len(job_changes) == 0:
-            continue
-        job = job_class(logger=logger,
-                        plastic_repo=plastic_repo,
-                        source_root_path=source_root_path,
-                        pretend=pretend)
-        for change in job_changes:
-            job.add_change(change)
-        jobs.append(job)
-
     # Convert Del + Add of the same file to a Move
     all_per_file_changes = []
     for lower_filename, per_file_changes in changes.per_file_changes.items():
@@ -67,6 +50,23 @@ def create_jobs(changes, plastic_repo, source_root_path, pretend, logger):
                                          pretend=pretend)
         per_file_job.add_change(change)
         per_file_jobs.append(per_file_job)
+
+    jobs = []
+    job_class_to_changes = [
+        (AddJob, changes.adds),
+        (DeleteJob, changes.deletes),
+        (ModifyJob, changes.modifications),
+        (MoveJob, changes.moves)]
+    for (job_class, job_changes) in job_class_to_changes:
+        if len(job_changes) == 0:
+            continue
+        job = job_class(logger=logger,
+                        plastic_repo=plastic_repo,
+                        source_root_path=source_root_path,
+                        pretend=pretend)
+        for change in job_changes:
+            job.add_change(change)
+        jobs.append(job)
 
     return per_file_jobs + jobs
 
