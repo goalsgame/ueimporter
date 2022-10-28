@@ -288,9 +288,31 @@ class MoveJob(Job):
             self.plastic_repo.add_multiple(dirs_to_add, self.logger)
             listener.end_step()
 
+        listener.start_step(f'Find parent dir case changes')
+        parent_dir_case_change_pairs = self.find_parent_dir_case_changes(ops)
+        self.logger.log(f'Found {len(parent_dir_case_change_pairs)}'
+                        f' case changes')
+        listener.end_step()
+
+        if parent_dir_case_change_pairs:
+            listener.start_step(f'Rename parent dirs with case changes')
+            for from_path, to_path in parent_dir_case_change_pairs:
+                self.logger.log(f'from: {from_path}')
+                self.logger.log(f'to: {to_path}')
+            self.plastic_repo.move_multiple(parent_dir_case_change_pairs,
+                                            self.logger)
+            listener.end_step()
+
         listener.start_step(f'Move files in plastic')
 
-        from_to_pairs = [(op.filename, op.target_filename) for op in ops]
+        def op_change_parent_dir_case_only(op):
+            parent = op.filename.parent
+            target_parent = op.target_filename.parent
+            return str(parent).lower() == str(target_parent).lower() and \
+                op.filename.name == op.target_filename.name
+        from_to_pairs = [(op.filename, op.target_filename)
+                         for op in ops
+                         if not op_change_parent_dir_case_only(op)]
         self.plastic_repo.move_multiple(from_to_pairs, self.logger)
         listener.end_step()
 
@@ -302,6 +324,27 @@ class MoveJob(Job):
         source_filenames = [op.filename for op in ops]
         self.remove_empty_parent_dirs(source_filenames)
         listener.end_step()
+
+    def find_parent_dir_case_changes(self, ops):
+        def op_change_parent_dir_case(op):
+            parent = op.filename.parent
+            target_parent = op.target_filename.parent
+            return str(parent).lower() == str(target_parent).lower() and \
+                parent != target_parent
+        parent_dir_case_change_pairs = []
+        unique_parent_dir_case_change_pairs = set()
+        for op in ops:
+            if not op_change_parent_dir_case(op):
+                continue
+            mismatches = path_util.find_parent_dirs_where_case_mismatch_disk(
+                op.target_filename,
+                self.plastic_repo.workspace_root)
+            for from_path, to_path in mismatches:
+                from_to_pair = (from_path, to_path)
+                if not from_to_pair in unique_parent_dir_case_change_pairs:
+                    parent_dir_case_change_pairs.append(from_to_pair)
+                    unique_parent_dir_case_change_pairs.add(from_to_pair)
+        return parent_dir_case_change_pairs
 
 
 # Register operations, and set up descriptions
