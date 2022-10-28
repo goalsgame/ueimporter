@@ -9,7 +9,12 @@ import ueimporter.path_util as path_util
 
 def create_jobs(changes, plastic_repo, source_root_path, pretend, logger):
     # Convert Del + Add of the same file to a Move
-    all_per_file_changes = []
+    change_type_to_changes = {
+        git.Add: changes.adds,
+        git.Delete: changes.deletes,
+        git.Modify: changes.modifications,
+        git.Move: changes.moves
+    }
     for lower_filename, per_file_changes in changes.per_file_changes.items():
         logger.log(f'{lower_filename}')
         logger.indent()
@@ -27,30 +32,15 @@ def create_jobs(changes, plastic_repo, source_root_path, pretend, logger):
             next_change = per_file_changes[i+1]
             if type(change) == git.Delete and type(next_change) == git.Add:
                 logger.log('Replacing Del + Add with Move')
-                per_file_changes[i] = git.Move(change.filename,
-                                               next_change.filename)
-                per_file_changes[i + 1] = None
+                change = git.Move(change.filename,
+                                  next_change.filename)
+                per_file_changes[i+1] = None
 
-        all_per_file_changes += [c for c in per_file_changes if c]
+            job_changes = change_type_to_changes.get(type(change))
+            assert job_changes != None
+            job_changes.append(change)
+
         logger.deindent()
-
-    change_to_job_type = {
-        git.Add: AddJob,
-        git.Delete: DeleteJob,
-        git.Modify: ModifyJob,
-        git.Move: MoveJob
-    }
-    per_file_jobs = []
-    for change in all_per_file_changes:
-        per_file_job_type = change_to_job_type.get(type(change))
-        assert per_file_job_type, \
-            f'Failed to find job type for {type(change).__name__}'
-        per_file_job = per_file_job_type(logger=logger,
-                                         plastic_repo=plastic_repo,
-                                         source_root_path=source_root_path,
-                                         pretend=pretend)
-        per_file_job.add_change(change)
-        per_file_jobs.append(per_file_job)
 
     jobs = []
     job_class_to_changes = [
@@ -65,11 +55,12 @@ def create_jobs(changes, plastic_repo, source_root_path, pretend, logger):
                         plastic_repo=plastic_repo,
                         source_root_path=source_root_path,
                         pretend=pretend)
+        job_changes = sorted(job_changes, key=lambda m: m.filename)
         for change in job_changes:
             job.add_change(change)
         jobs.append(job)
 
-    return per_file_jobs + jobs
+    return jobs
 
 
 def find_dirs_to_create(target_root, filenames):
