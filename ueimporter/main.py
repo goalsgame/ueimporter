@@ -8,6 +8,7 @@ from pathlib import Path
 
 import ueimporter.git as git
 import ueimporter.job
+import ueimporter.path_util as path_util
 import ueimporter.plastic as plastic
 import ueimporter.version as version
 from ueimporter import Logger
@@ -411,6 +412,24 @@ def main():
 
     if not config.pretend and not verify_plastic_repo_state(config, logger):
         return 1
+
+    if not path_util.is_directory_on_case_sensitive_filesystem(
+            config.plastic_repo.workspace_root):
+        logger.log_warning('Warning: Case insensitive filesystem detected.\n'
+                           'ueimporter have no way of correctly replicating'
+                           ' case changes of files and directories from git.\n'
+                           'You are adviced to run ueimporter from an OS'
+                           ' with a case sensitive file system instead'
+                           ', such as Linux.')
+
+        response = prompt_user_continue(
+            question='Do you want to continue anyway?',
+            logger=logger)
+        if response == ContinuePromptResponse.ABORT:
+            logger.log("Aborting")
+            return 1
+        else:
+            logger.log('Beware, yonder there be dragons.')
 
     start_timestamp = time.time()
     jobs = read_change_jobs(config, logger)
