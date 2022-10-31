@@ -428,8 +428,11 @@ def main():
                 logger.indent()
                 logger.log_warning(f'{err}')
 
-                response = InvalidOpResponse.SKIP_ALL if skip_all_invalid_ops \
-                    else prompt_user_invalid_op_response(logger)
+                if skip_all_invalid_ops:
+                    response = InvalidOpResponse.SKIP_ALL
+                else:
+                    response = prompt_user_invalid_op_response(logger)
+
                 if response == InvalidOpResponse.ABORT:
                     logger.log("Aborting")
                     return 1
