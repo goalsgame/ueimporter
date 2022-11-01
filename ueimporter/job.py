@@ -58,7 +58,7 @@ def create_jobs(changes, plastic_repo, source_root_path, pretend, logger):
     # in the target repo
     logger.log('Finding moves that have already been applied in target.')
     logger.indent()
-    moves_already_existing_in_target = [ \
+    moves_already_existing_in_target = [
             move for move in changes.moves
             if not plastic_repo.to_workspace_path(move.filename).is_file()
             and plastic_repo.to_workspace_path(move.target_filename).is_file()]
