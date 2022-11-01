@@ -9,6 +9,8 @@ import ueimporter.path_util as path_util
 
 def create_jobs(changes, plastic_repo, source_root_path, pretend, logger):
     # Convert Del + Add of the same file to a Move
+    logger.log('Finding deletes followed by adds on the same file')
+    logger.indent()
     change_type_to_changes = {
         git.Add: changes.adds,
         git.Delete: changes.deletes,
@@ -16,8 +18,6 @@ def create_jobs(changes, plastic_repo, source_root_path, pretend, logger):
         git.Move: changes.moves
     }
     for lower_filename, per_file_changes in changes.per_file_changes.items():
-        logger.log(f'{lower_filename}')
-        logger.indent()
         for change in per_file_changes:
             line = f'{type(change).__name__} {change.filename}'
             if type(change) == git.Move:
@@ -31,16 +31,28 @@ def create_jobs(changes, plastic_repo, source_root_path, pretend, logger):
 
             next_change = per_file_changes[i+1]
             if type(change) == git.Delete and type(next_change) == git.Add:
-                logger.log('Replacing Del + Add with Move')
-                change = git.Move(change.filename,
-                                  next_change.filename)
+                move = git.Move(change.filename, next_change.filename)
+
+                logger.log('Replacing')
+                logger.indent()
+                for change_to_log in [change, next_change]:
+                    for line in str(change_to_log).split('\n'):
+                        logger.log(line)
+                logger.deindent()
+                logger.log('With')
+                logger.indent()
+                for line in str(move).split('\n'):
+                    logger.log(line)
+                logger.deindent()
+
+                change = move
                 per_file_changes[i+1] = None
 
             job_changes = change_type_to_changes.get(type(change))
             assert job_changes != None
             job_changes.append(change)
 
-        logger.deindent()
+    logger.deindent()
 
     jobs = []
     job_class_to_changes = [
