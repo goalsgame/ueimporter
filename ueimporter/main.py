@@ -416,9 +416,9 @@ def main():
     if not path_util.is_directory_on_case_sensitive_filesystem(
             config.plastic_repo.workspace_root):
         logger.log_warning('Warning: Case insensitive filesystem detected.\n'
-                           'ueimporter have no way of correctly replicating'
+                           'ueimporter has no way of correctly replicating'
                            ' case changes of files and directories from git.\n'
-                           'You are adviced to run ueimporter from an OS'
+                           'You are advised to run ueimporter from an OS'
                            ' with a case sensitive file system instead'
                            ', such as Linux.')
 
