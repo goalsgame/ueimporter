@@ -100,14 +100,27 @@ class MoveOp(Operation):
             return OpValidation.invalid(
                 f'{self.filename} is moved to the same file')
         if not source_root.joinpath(self.target_filename).is_file():
-            return OpValidation.invalid_not_exist(self.target_filename, source_root)
-        if not target_root.joinpath(self.filename).is_file():
-            return OpValidation.invalid_not_exist(self.filename, target_root)
+            return OpValidation.invalid_not_exist(
+                self.target_filename,
+                source_root)
+        source_exist_in_target = \
+            target_root.joinpath(self.filename).is_file()
+        target_exist_in_target = \
+            target_root.joinpath(self.target_filename).is_file()
+        if not source_exist_in_target and not target_exist_in_target:
+            # Even though the source file does not exist in the target root,
+            # we might still have a valid move, if the target file
+            # already exists. in this case no plastic move will be performed,
+            # but the contents of the file will be copied from source.
+            return OpValidation.invalid_not_exist(
+                self.filename,
+                target_root)
+        if target_exist_in_target and source_exist_in_target:
+            # Even though the target file already exist in the target root,
+            # we might still have a valid move, if the source file
+            # does not exist. In this case no plastic move wi
+            return OpValidation.invalid_exist(
+                self.target_filename,
+                source_root)
 
-        if str(self.filename).lower() == str(self.target_filename).lower():
-            # This is a rename that only changes case on either file
-            # or parent directories, both valid operations.
-            return OpValidation.valid()
-        if target_root.joinpath(self.target_filename).is_file():
-            return OpValidation.invalid_exist(self.target_filename, source_root)
         return OpValidation.valid()

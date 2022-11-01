@@ -54,6 +54,32 @@ def create_jobs(changes, plastic_repo, source_root_path, pretend, logger):
 
     logger.deindent()
 
+    # Convert Move to Modify if move appears to already happened
+    # in the target repo
+    logger.log('Finding moves that have already been applied in target.')
+    logger.indent()
+    moves_already_existing_in_target = [ \
+            move for move in changes.moves
+            if not plastic_repo.to_workspace_path(move.filename).is_file()
+            and plastic_repo.to_workspace_path(move.target_filename).is_file()]
+    for move in moves_already_existing_in_target:
+        modify = git.Modify(move.target_filename)
+
+        logger.log('Replacing')
+        logger.indent()
+        for line in str(move).split('\n'):
+            logger.log(line)
+        logger.deindent()
+        logger.log('With')
+        logger.indent()
+        for line in str(modify).split('\n'):
+            logger.log(line)
+        logger.deindent()
+
+        changes.modifications.append(modify)
+        changes.moves.remove(move)
+    logger.deindent()
+
     jobs = []
     job_class_to_changes = [
         (AddJob, changes.adds),
