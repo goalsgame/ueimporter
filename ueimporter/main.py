@@ -8,6 +8,7 @@ from pathlib import Path
 
 import ueimporter.git as git
 import ueimporter.job
+import ueimporter.path_util as path_util
 import ueimporter.plastic as plastic
 import ueimporter.version as version
 from ueimporter import Logger
@@ -269,27 +270,34 @@ def update_ueimporter_json(config, logger):
         config.plastic_repo.checkout(config.ueimporter_json_filename, logger)
 
 
-class InvalidOpResponse(enum.Enum):
-    SKIP = 1
-    SKIP_ALL = 2
+class ContinuePromptResponse(enum.Enum):
+    CONTINUE = 1
+    CONTINUE_ALWAYS = 2
     ABORT = 3
 
 
-def prompt_user_invalid_op_response(logger):
+def prompt_user_continue(logger,
+                         question,
+                         include_always_option=False):
     while True:
         logger.log('')
         user_input_map = {
-            'yes': InvalidOpResponse.SKIP,
-            'y': InvalidOpResponse.SKIP,
+            'yes': ContinuePromptResponse.CONTINUE,
+            'y': ContinuePromptResponse.CONTINUE,
 
-            'all': InvalidOpResponse.SKIP_ALL,
-            'a': InvalidOpResponse.SKIP_ALL,
-
-            'no': InvalidOpResponse.ABORT,
-            'n': InvalidOpResponse.ABORT,
+            'no': ContinuePromptResponse.ABORT,
+            'n': ContinuePromptResponse.ABORT,
         }
-        logger.log('Do you want to continue and skip this op?'
-                   ' [yes|all|no]: ', new_line=False)
+        legend = '[yes|'
+        if include_always_option:
+            legend += 'all|'
+            user_input_map |= {
+                'all': ContinuePromptResponse.CONTINUE_ALWAYS,
+                'a': ContinuePromptResponse.CONTINUE_ALWAYS,
+            }
+        legend += 'no]'
+
+        logger.log(f'{question} {legend}: ', new_line=False)
         user_input = input()
         response = user_input_map.get(user_input.lower())
         if response:
@@ -405,6 +413,24 @@ def main():
     if not config.pretend and not verify_plastic_repo_state(config, logger):
         return 1
 
+    if not path_util.is_directory_on_case_sensitive_filesystem(
+            config.plastic_repo.workspace_root):
+        logger.log_warning('Warning: Case insensitive filesystem detected.\n'
+                           'ueimporter has no way of correctly replicating'
+                           ' case changes of files and directories from git.\n'
+                           'You are advised to run ueimporter from an OS'
+                           ' with a case sensitive file system instead'
+                           ', such as Linux.')
+
+        response = prompt_user_continue(
+            question='Do you want to continue anyway?',
+            logger=logger)
+        if response == ContinuePromptResponse.ABORT:
+            logger.log("Aborting")
+            return 1
+        else:
+            logger.log('Beware, yonder there be dragons.')
+
     start_timestamp = time.time()
     jobs = read_change_jobs(config, logger)
     logger.log(f'Processing {len(jobs)} jobs')
@@ -428,17 +454,23 @@ def main():
                 logger.indent()
                 logger.log_warning(f'{err}')
 
-                response = InvalidOpResponse.SKIP_ALL if skip_all_invalid_ops \
-                    else prompt_user_invalid_op_response(logger)
-                if response == InvalidOpResponse.ABORT:
+                if skip_all_invalid_ops:
+                    response = ContinuePromptResponse.CONTINUE_ALWAYS
+                else:
+                    response = prompt_user_continue(
+                        question='Do you want to continue and skip this op?',
+                        include_always_option=True,
+                        logger=logger)
+
+                if response == ContinuePromptResponse.ABORT:
                     logger.log("Aborting")
                     return 1
-                elif response == InvalidOpResponse.SKIP or \
-                        response == InvalidOpResponse.SKIP_ALL:
+                elif response == ContinuePromptResponse.CONTINUE or \
+                        response == ContinuePromptResponse.CONTINUE_ALWAYS:
                     job.remove_op(op)
                     logger.log("Skipping operation")
                     skip_all_invalid_ops = \
-                        response == InvalidOpResponse.SKIP_ALL
+                        response == ContinuePromptResponse.CONTINUE_ALWAYS
                 logger.deindent()
 
         logger.deindent()

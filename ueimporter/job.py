@@ -8,36 +8,16 @@ import ueimporter.path_util as path_util
 
 
 def create_jobs(changes, plastic_repo, source_root_path, pretend, logger):
-    add = AddJob(logger=logger,
-                 plastic_repo=plastic_repo,
-                 source_root_path=source_root_path,
-                 pretend=pretend)
-    delete = DeleteJob(logger=logger,
-                       plastic_repo=plastic_repo,
-                       source_root_path=source_root_path,
-                       pretend=pretend)
-    modify = ModifyJob(logger=logger,
-                       plastic_repo=plastic_repo,
-                       source_root_path=source_root_path,
-                       pretend=pretend)
-    move = MoveJob(logger=logger,
-                   plastic_repo=plastic_repo,
-                   source_root_path=source_root_path,
-                   pretend=pretend)
-    for a in changes.adds:
-        add.add_change(a)
-    for d in changes.deletes:
-        delete.add_change(d)
-    for m in changes.modifications:
-        modify.add_change(m)
-    for m in changes.moves:
-        move.add_change(m)
-
     # Convert Del + Add of the same file to a Move
-    all_per_file_changes = []
+    logger.log('Finding deletes followed by adds on the same file')
+    logger.indent()
+    change_type_to_changes = {
+        git.Add: changes.adds,
+        git.Delete: changes.deletes,
+        git.Modify: changes.modifications,
+        git.Move: changes.moves
+    }
     for lower_filename, per_file_changes in changes.per_file_changes.items():
-        logger.log(f'{lower_filename}')
-        logger.indent()
         for change in per_file_changes:
             line = f'{type(change).__name__} {change.filename}'
             if type(change) == git.Move:
@@ -46,38 +26,79 @@ def create_jobs(changes, plastic_repo, source_root_path, pretend, logger):
 
         for i in range(0, len(per_file_changes) - 1):
             change = per_file_changes[i]
-            next_change = per_file_changes[i+1]
-            if type(change) != git.Delete or type(next_change) != git.Add:
+            if not change:
                 continue
 
-            logger.log('Replacing Del + Add with Move')
-            per_file_changes[i] = git.Move(change.filename,
-                                           next_change.filename)
-            per_file_changes[i + 1] = None
+            next_change = per_file_changes[i+1]
+            if type(change) == git.Delete and type(next_change) == git.Add:
+                move = git.Move(change.filename, next_change.filename)
 
-        all_per_file_changes += [c for c in per_file_changes if c]
+                logger.log('Replacing')
+                logger.indent()
+                for change_to_log in [change, next_change]:
+                    for line in str(change_to_log).split('\n'):
+                        logger.log(line)
+                logger.deindent()
+                logger.log('With')
+                logger.indent()
+                for line in str(move).split('\n'):
+                    logger.log(line)
+                logger.deindent()
+
+                change = move
+                per_file_changes[i+1] = None
+
+            job_changes = change_type_to_changes.get(type(change))
+            assert job_changes != None
+            job_changes.append(change)
+
+    logger.deindent()
+
+    # Convert Move to Modify if move appears to already happened
+    # in the target repo
+    logger.log('Finding moves that have already been applied in target.')
+    logger.indent()
+    moves_already_existing_in_target = [
+            move for move in changes.moves
+            if not plastic_repo.to_workspace_path(move.filename).is_file()
+            and plastic_repo.to_workspace_path(move.target_filename).is_file()]
+    for move in moves_already_existing_in_target:
+        modify = git.Modify(move.target_filename)
+
+        logger.log('Replacing')
+        logger.indent()
+        for line in str(move).split('\n'):
+            logger.log(line)
+        logger.deindent()
+        logger.log('With')
+        logger.indent()
+        for line in str(modify).split('\n'):
+            logger.log(line)
         logger.deindent()
 
-    change_to_job_type = {
-        git.Add: AddJob,
-        git.Delete: DeleteJob,
-        git.Modify: ModifyJob,
-        git.Move: MoveJob
-    }
-    per_file_jobs = []
-    for change in all_per_file_changes:
-        per_file_job_type = change_to_job_type.get(type(change))
-        assert per_file_job_type, \
-            f'Failed to find job type for {type(change).__name__}'
-        per_file_job = per_file_job_type(logger=logger,
-                                         plastic_repo=plastic_repo,
-                                         source_root_path=source_root_path,
-                                         pretend=pretend)
-        per_file_job.add_change(change)
-        per_file_jobs.append(per_file_job)
+        changes.modifications.append(modify)
+        changes.moves.remove(move)
+    logger.deindent()
 
-    jobs = [add, delete, modify, move]
-    return per_file_jobs + [job for job in jobs if len(job.ops) > 0]
+    jobs = []
+    job_class_to_changes = [
+        (AddJob, changes.adds),
+        (DeleteJob, changes.deletes),
+        (ModifyJob, changes.modifications),
+        (MoveJob, changes.moves)]
+    for (job_class, job_changes) in job_class_to_changes:
+        if len(job_changes) == 0:
+            continue
+        job = job_class(logger=logger,
+                        plastic_repo=plastic_repo,
+                        source_root_path=source_root_path,
+                        pretend=pretend)
+        job_changes = sorted(job_changes, key=lambda m: m.filename)
+        for change in job_changes:
+            job.add_change(change)
+        jobs.append(job)
+
+    return jobs
 
 
 def find_dirs_to_create(target_root, filenames):
@@ -211,14 +232,16 @@ class Job:
 
         plastic_workspace_root = self.plastic_repo.workspace_root
 
-        def is_dir_empty(p):
+        def is_existing_dir_empty(p):
             workspace_path = plastic_workspace_root.joinpath(p)
+            if not workspace_path.exists():
+                return False
             for _ in workspace_path.iterdir():
                 return False
             return workspace_path.is_dir()
 
         while len(parents) > 0:
-            empty_parents = [p for p in parents if is_dir_empty(p)]
+            empty_parents = [p for p in parents if is_existing_dir_empty(p)]
             if len(empty_parents) == 0:
                 break
 
@@ -303,54 +326,9 @@ class MoveJob(Job):
             self.plastic_repo.add_multiple(dirs_to_add, self.logger)
             listener.end_step()
 
-        listener.start_step(f'Find parent dir case changes')
-
-        def op_change_parent_dir_case(op):
-            parent = op.filename.parent
-            target_parent = op.target_filename.parent
-            return str(parent).lower() == str(target_parent).lower() and \
-                parent != target_parent
-        parent_dir_case_change_pairs = []
-        unique_parent_dir_case_change_pairs = set()
-        for op in ops:
-            if not op_change_parent_dir_case(op):
-                continue
-            mismatches = path_util.find_parent_dirs_where_case_mismatch_disk(
-                op.target_filename,
-                self.plastic_repo.workspace_root)
-            from_replacement = ''
-            for from_path, to_path in mismatches:
-                if from_replacement:
-                    from_path = from_replacement + \
-                        from_path[len(from_replacement):]
-                from_to_pair = (from_path, to_path)
-                if not from_to_pair in unique_parent_dir_case_change_pairs:
-                    parent_dir_case_change_pairs.append(from_to_pair)
-                    unique_parent_dir_case_change_pairs.add(from_to_pair)
-
-        self.logger.log(f'Found {len(parent_dir_case_change_pairs)}'
-                        f' case changes')
-        listener.end_step()
-
-        if parent_dir_case_change_pairs:
-            listener.start_step(f'Rename parent dirs with case changes')
-            for from_path, to_path in parent_dir_case_change_pairs:
-                self.logger.log(f'from: {from_path}')
-                self.logger.log(f'to: {to_path}')
-            self.plastic_repo.move_multiple(parent_dir_case_change_pairs,
-                                            self.logger)
-            listener.end_step()
-
         listener.start_step(f'Move files in plastic')
 
-        def op_change_parent_dir_case_only(op):
-            parent = op.filename.parent
-            target_parent = op.target_filename.parent
-            return str(parent).lower() == str(target_parent).lower() and \
-                op.filename.name == op.target_filename.name
-        from_to_pairs = [(op.filename, op.target_filename)
-                         for op in ops
-                         if not op_change_parent_dir_case_only(op)]
+        from_to_pairs = [(op.filename, op.target_filename) for op in ops]
         self.plastic_repo.move_multiple(from_to_pairs, self.logger)
         listener.end_step()
 

@@ -5,6 +5,8 @@ import unicodedata
 
 from pathlib import PurePosixPath
 
+import ueimporter.path_util as path_util
+
 
 class ParseError(Exception):
     def __init__(self, message):
@@ -21,6 +23,9 @@ class Change:
     @property
     def filename(self):
         return self._filename
+
+    def __str__(self):
+        return f'{self.__class__.__name__} {self.filename}'
 
 
 class Add(Change):
@@ -46,6 +51,20 @@ class Move(Change):
     @property
     def target_filename(self):
         return self._target_filename
+
+    def __str__(self):
+        common = path_util.commonpath(self.filename, self.target_filename)
+        if common:
+            from_relative = self.filename.relative_to(common)
+            to_relative = self.target_filename.relative_to(common)
+            return \
+                f'Move {from_relative}\n' \
+                f'  to {to_relative}\n' \
+                f'  in {common}'
+        else:
+            return \
+                f'Move {self.filename}\n' \
+                f'  to {self.target_filename}'
 
 
 def to_valid_filename(value):
