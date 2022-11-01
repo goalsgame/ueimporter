@@ -118,7 +118,8 @@ class MoveOp(Operation):
         if target_exist_in_target and source_exist_in_target:
             # Even though the target file already exist in the target root,
             # we might still have a valid move, if the source file
-            # does not exist. In this case no plastic move wi
+            # does not exist. In this case no plastic move will be performed,
+            # but the contents of the file will be copied from source.
             return OpValidation.invalid_exist(
                 self.target_filename,
                 source_root)
