@@ -144,7 +144,7 @@ You can find zips/tarballs for all UE releases under [UnrealEngine/releases](htt
 
 ## Installation <a name="install" />
 
-Install a snapshot of UEIMPORTER using `pip`, from the Git repo root
+Install a snapshot of UEIMPORTER using `pip`, from the UEIMPORTER Git repo root
 ```sh
 $ pip install --user .
 ```
