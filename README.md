@@ -192,6 +192,22 @@ $ git fetch
 There can be no private/ignored files present in the directory tree, they might interfere
 with the upgrade process.
 
+If you have a lot of files that Plastic thinks are added due to how Plastic ignore files differs from git ignore file, the Plastic SCM client will not handle this nicely. Also, there is currently no command to clean workspace from added files in Plastic. Fallback is semi-scripted commands:
+
+PowerShell option:
+```ps
+cm status --private --short $workspacePath | % { rm $_ }
+```
+
+bash:
+```sh
+cm status --private --short ${WORKSPACE_PATH} | while read FILE; do rm -rf $FILE; done
+```
+or with `xargs`
+```sh
+cm status --private --short ${WORKSPACE_PATH} | xargs rm
+```
+
 #### 4. Download & extract release zip/tarball
 
 From [UnrealEngine/releases](https://github.com/EpicGames/UnrealEngine/releases)
