@@ -229,7 +229,12 @@ The `--pretend` argument makes the script simply log the files it will upgrade,
 without actually doing it. Remove this parameter once you feel confident
 that UEIMPORTER will do what you expect.
 
-**_NOTE:_** If you get a warning complaining about `warning: exhaustive rename detection was skipped due to too many files.`, make sure you set `diff.rename=true` and `diff.renamelimit=999999` (or an appropriately small number) in you git config.
+**_NOTE:_** If you get a warning complaining about `warning: exhaustive rename detection was skipped due to too many files.`, make sure you set `diff.rename=true` and `diff.renamelimit=999999` (or an appropriately small number) in you git config:
+```
+[diff]
+    rename=true
+    renamelimit=999999
+```
 
 #### 6. Stop pretending, and run UEIMPORTER for real
 ```sh
