@@ -212,7 +212,7 @@ cm status --private --short ${WORKSPACE_PATH} | xargs rm
 
 From [UnrealEngine/releases](https://github.com/EpicGames/UnrealEngine/releases)
 In this example we unpack all releases in a directory called `~/vendor/UnrealEngine`,
-it is assumed to hold a subdirectory for each release named exactly like the Git release tag.
+it is assumed to hold a subdirectory for each release named exactly like the Git release tag, prefixed by `UnrealEngine-` (e g `UnrealEngine-5.3.0-preview-1`).
 
 #### 5. Run script with --pretend
 
