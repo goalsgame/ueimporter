@@ -11,7 +11,7 @@ by replicating changes from the official
 
 1. [Suggested branch layout](#branch-layout)
 
-1. [Prequestives](#prequestives)
+1. [Prerequisites](#prerequisites)
 
 1. [Installation](#install)
     1. [Uninstall](#install-uninstall)
@@ -123,7 +123,11 @@ First we import changes using UEIMPORTER, then merge with main on a task branch
 before we publish it to `main`.
 
 
-## Prequestives <a name="prequestives" />
+## Prerequisites <a name="prerequisites" />
+
+#### A case-sensitive filesystem
+
+In order to properly identify files that have been renamed only to adjust casing a case-sensitive filesystem is required. Linux is the safe bet for this, as case-sensitivity isn't the default on either Windows nor MacOS. Since Windows 10, individual folder-trees can be flagged as being case-sensitive. In contrast, to achieve this on MacOS the used volume needs to have a filesystem with support for case-sensitivity.
 
 #### * Python 3.10+
 
@@ -177,6 +181,8 @@ $ pip install --user -e .
 ### Step by step guide <a name="usage-guide" />
 
 #### 1. Switch to the lastest changeset on Plastics vendor branch
+
+Switch the workspace to the `vendor-unreal-engine` branch.
 
 #### 2. Fetch latest from Epics main Git repo
 
