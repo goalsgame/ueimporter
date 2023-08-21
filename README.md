@@ -125,7 +125,7 @@ before we publish it to `main`.
 
 ## Prerequisites <a name="prerequisites" />
 
-#### A case-sensitive filesystem
+#### * A case-sensitive filesystem
 
 In order to properly identify files that have been renamed only to adjust casing a case-sensitive filesystem is required. Linux is the safe bet for this, as case-sensitivity isn't the default on either Windows nor MacOS. Since Windows 10, individual folder-trees can be flagged as being case-sensitive. In contrast, to achieve this on MacOS the used volume needs to have a filesystem with support for case-sensitivity.
 
